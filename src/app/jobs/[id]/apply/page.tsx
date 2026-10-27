@@ -7,6 +7,7 @@ import { JobActions } from "@/components/jobs/job-actions";
 import { WorkAuthSection } from "@/components/jobs/work-auth-section";
 import { CopyButton } from "@/components/apply/copy-button";
 import { DocEditor } from "@/components/apply/doc-editor";
+import { QuestionHelper } from "@/components/apply/question-helper";
 import { getJob } from "@/lib/jobs";
 import { getProfile } from "@/lib/profile";
 import { getSettings } from "@/lib/settings";
@@ -103,6 +104,7 @@ export default async function ApplyKitPage({ params }: { params: Promise<{ id: s
               ))}
             </CardContent>
           </Card>
+          <QuestionHelper jobId={job.id} hasAi={hasAi} />
         </div>
 
         <div className="grid gap-6">

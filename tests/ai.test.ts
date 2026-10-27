@@ -40,3 +40,23 @@ describe("writeCoverLetter", () => {
     await expect(writeCoverLetter(job, profile)).rejects.toThrow(/declined/);
   });
 });
+
+describe("answerQuestion", () => {
+  beforeEach(() => create.mockReset());
+
+  it("includes the question, the length and saved answers", async () => {
+    const { answerQuestion } = await import("@/lib/ai");
+    create.mockResolvedValue({ stop_reason: "end_turn", content: [{ type: "text", text: "I led..." }] });
+    await expect(
+      answerQuestion(job, profile, "Why this role?", "short", [
+        { question: "Salary?", answer: "$120k" },
+        { question: "Start date?", answer: "" },
+      ]),
+    ).resolves.toBe("I led...");
+    const params = create.mock.calls[0][0];
+    expect(params.system).toContain("2 or 3 sentences");
+    expect(params.messages[0].content).toContain("<question>\nWhy this role?\n</question>");
+    expect(params.messages[0].content).toContain("A: $120k");
+    expect(params.messages[0].content).not.toContain("Start date?");
+  });
+});

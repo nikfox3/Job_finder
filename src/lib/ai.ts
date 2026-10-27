@@ -83,3 +83,19 @@ export function tailorResume(job: Job, profile: Profile) {
     `${context(job, profile)}\n\nTailor this resume for the job. Return only the resume.`,
   );
 }
+
+export type AnswerLength = "short" | "medium" | "long";
+const LENGTHS: Record<AnswerLength, string> = {
+  short: "2 or 3 sentences",
+  medium: "one paragraph of about 80 to 120 words",
+  long: "two short paragraphs, under 250 words",
+};
+
+/** Drafts an answer to one application question, in the candidate's own voice. */
+export function answerQuestion(job: Job, profile: Profile, question: string, length: AnswerLength, saved: { question: string; answer: string }[]) {
+  const facts = saved.filter((a) => a.answer).map((a) => `Q: ${a.question}\nA: ${a.answer}`);
+  return write(
+    `You help a job seeker answer questions on job applications. ${RULES} Write in the first person, in a natural, confident voice, as the candidate. Answer the question directly, connect it to this job where it fits, and use a specific example from the resume when one applies. Keep it to ${LENGTHS[length]}. Return only the answer.`,
+    `${context(job, profile)}${facts.length ? `\n\n<saved_answers>\n${facts.join("\n\n")}\n</saved_answers>` : ""}\n\n<question>\n${question}\n</question>`,
+  );
+}

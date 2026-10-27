@@ -15,3 +15,7 @@ export function saveAnswers(rows: { question: string; answer: string }[]) {
     rows.forEach((r, i) => insert.run(r.question, r.answer, i + 1));
   })();
 }
+
+export function addAnswer(question: string, answer: string) {
+  db.prepare("INSERT INTO answers (question, answer, position) VALUES (?, ?, (SELECT COALESCE(MAX(position), 0) + 1 FROM answers))").run(question, answer);
+}
