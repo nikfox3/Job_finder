@@ -23,7 +23,7 @@ export type JobInput = {
 
 export type FetchContext = {
   keywords: string[];
-  fetchJson: (url: string) => Promise<unknown>;
+  fetchJson: (url: string, init?: { method?: "GET" | "POST"; headers?: Record<string, string>; body?: string }) => Promise<unknown>;
   fetchText: (url: string) => Promise<string>;
 };
 

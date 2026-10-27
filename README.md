@@ -56,6 +56,9 @@ Jobs refresh when the app starts and every 3 hours while it runs, or when you pr
 | 4 Day Week | Jobs with a 4-day or 32-hour week, filtered to design roles |
 | NoDesk | Curated remote jobs, filtered to design roles |
 | Jobspresso | Hand-screened remote jobs, filtered to design roles |
+| Built In | US tech companies, remote design and UX roles |
+| Welcome to the Jungle | Startups and scale-ups with full-remote design roles |
+| Hacker News | The monthly "Who is hiring?" thread, filtered to design roles |
 | Arbeitnow | Mostly European roles (off by default) |
 | Company watchlist | Any company hiring through Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee or Breezy. Add their careers link in Settings |
 
