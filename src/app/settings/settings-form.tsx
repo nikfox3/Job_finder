@@ -91,6 +91,24 @@ export function SettingsForm({ initial, sources }: { initial: Settings; sources:
                 ))}
             </select>
           </Row>
+          {settings.homeCountry && (
+            <Row
+              id="locationScope"
+              title="Show jobs"
+              description="Country only shows roles that name your country (like “US only”), so you skip ones meant for other countries or worldwide hiring."
+            >
+              <select
+                id="locationScope"
+                value={settings.locationScope}
+                onChange={(e) => save({ locationScope: e.target.value as Settings["locationScope"] })}
+                className="h-9 w-52 rounded-md border border-input bg-card px-3 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              >
+                <option value="home">{COUNTRIES.find((c) => c.code === settings.homeCountry)?.name} only</option>
+                <option value="open">Open to {COUNTRIES.find((c) => c.code === settings.homeCountry)?.name}</option>
+                <option value="all">All locations</option>
+              </select>
+            </Row>
+          )}
           <Row id="remoteOnly" title="Remote only" description="Hide roles that need you in an office.">
             <Switch id="remoteOnly" checked={settings.remoteOnly} onCheckedChange={(v) => save({ remoteOnly: v })} />
           </Row>

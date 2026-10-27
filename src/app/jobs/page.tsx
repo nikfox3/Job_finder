@@ -48,11 +48,15 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
   const hideAccount = params.account ? params.account === "none" : settings.hideAccountRequired;
   const home = settings.homeCountry;
   // The URL can override the saved preference either way.
-  const onlyMine = Boolean(home) && params.where !== "all";
+  const scope = home ? (params.where ?? settings.locationScope) : "all";
   const jobs = dedupe(listJobs(filters))
     .filter((job) => !hideAccount || applyMethod(job.apply_url ?? job.url, job.apply_account).kind !== "account")
     .map((job) => ({ job, fit: fitFor(job), where: home ? eligibility(job.location, home) : null }))
-    .filter(({ where }) => !onlyMine || !where || where.canApply);
+    .filter(({ where }) => {
+      if (!where || scope === "all") return true;
+      // "home" keeps jobs that name your country, e.g. "US only" or "Remote - US".
+      return scope === "home" ? where.tier === 0 : where.canApply;
+    });
   if (params.sort === "fit") jobs.sort((a, b) => b.fit.score - a.fit.score);
   if (params.sort === "closest") jobs.sort((a, b) => (a.where?.tier ?? 3) - (b.where?.tier ?? 3) || (a.where?.distanceKm ?? 0) - (b.where?.distanceKm ?? 0));
   const selectedJob = (params.job && getJob(Number(params.job))) || jobs[0]?.job || null;
@@ -85,7 +89,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
         <AddJob />
       </div>
       <Suspense>
-        <JobFilters sources={listJobSources()} hideAccountDefault={settings.hideAccountRequired} homeName={countryByCode(home)?.name ?? null} />
+        <JobFilters sources={listJobSources()} hideAccountDefault={settings.hideAccountRequired} homeName={countryByCode(home)?.name ?? null} scopeDefault={settings.locationScope} />
       </Suspense>
       {jobs.length === 0 ? (
         <EmptyState

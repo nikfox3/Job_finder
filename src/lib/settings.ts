@@ -7,12 +7,16 @@ export type SourceInfo = { id: string; name: string; description: string };
 
 export const JOB_SOURCES: SourceInfo[] = SOURCES.map(({ id, name, description }) => ({ id, name, description }));
 
+export type LocationScope = "home" | "open" | "all";
+
 export type Settings = {
   autoSubmit: boolean;
   remoteOnly: boolean;
   hideAccountRequired: boolean;
   /** ISO country code of where you live, e.g. "US". Empty means not set. */
   homeCountry: string;
+  /** Default location filter: only jobs that name your country, jobs you can take, or everything. */
+  locationScope: LocationScope;
   keywords: string;
   sources: Record<string, boolean>;
   companies: WatchedCompany[];
@@ -23,6 +27,7 @@ export const DEFAULT_SETTINGS: Settings = {
   remoteOnly: true,
   hideAccountRequired: false,
   homeCountry: "",
+  locationScope: "open",
   keywords: "product designer, ux designer, ui designer",
   sources: Object.fromEntries(SOURCES.map((s) => [s.id, s.defaultEnabled])),
   companies: [],

@@ -9,7 +9,17 @@ import { sourceName } from "@/lib/format";
 const selectClass =
   "h-9 rounded-md border border-input bg-card px-3 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-export function JobFilters({ sources, hideAccountDefault, homeName }: { sources: string[]; hideAccountDefault: boolean; homeName: string | null }) {
+export function JobFilters({
+  sources,
+  hideAccountDefault,
+  homeName,
+  scopeDefault,
+}: {
+  sources: string[];
+  hideAccountDefault: boolean;
+  homeName: string | null;
+  scopeDefault: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -58,8 +68,9 @@ export function JobFilters({ sources, hideAccountDefault, homeName }: { sources:
         <option value="30">Past month</option>
       </select>
       {homeName && (
-        <select className={selectClass} value={params.get("where") ?? "me"} onChange={(e) => set("where", e.target.value)}>
-          <option value="me">Open to {homeName}</option>
+        <select className={selectClass} value={params.get("where") ?? scopeDefault} onChange={(e) => set("where", e.target.value)}>
+          <option value="home">{homeName} only</option>
+          <option value="open">Open to {homeName}</option>
           <option value="all">All locations</option>
         </select>
       )}
