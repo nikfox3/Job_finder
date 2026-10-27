@@ -1,3 +1,5 @@
+import { readWorkAuth } from "./work-auth";
+
 // Works out where a job can be done from, using only the job's location text.
 // Country-level on purpose: job feeds rarely say more than "US only" or "EMEA".
 
@@ -179,12 +181,22 @@ function distanceKm([lat1, lng1]: [number, number], [lat2, lng2]: [number, numbe
  */
 export type Eligibility = { tier: 0 | 1 | 2 | 3 | 4; label: string; canApply: boolean; distanceKm: number };
 
-export function eligibility(location: string | null, home: string): Eligibility {
+export function eligibility(location: string | null, home: string, description?: string | null): Eligibility {
   const me = countryByCode(home);
   const reach = parseLocation(location);
   if (!me) return { tier: 3, label: location ?? "Location not stated", canApply: true, distanceKm: 0 };
 
   if (reach.countries.includes(me.code)) return { tier: 0, label: `Open to ${me.name}`, canApply: true, distanceKm: 0 };
+
+  // Many "Remote" or "Worldwide" listings say who they really hire in the description.
+  const required = readWorkAuth(description).requiredIn;
+  if (required.length) {
+    if (required.includes(me.code)) return { tier: 0, label: `${me.name}-based only`, canApply: true, distanceKm: 0 };
+    reach.countries = required;
+    reach.regions = [];
+    reach.worldwide = false;
+  }
+
   if (reach.regions.includes(me.region)) return { tier: 1, label: `Open to ${REGION_NAMES[me.region]}`, canApply: true, distanceKm: 0 };
   if (reach.worldwide) return { tier: 2, label: "Worldwide", canApply: true, distanceKm: 0 };
   if (!reach.countries.length && !reach.regions.length) return { tier: 3, label: "Location not stated", canApply: true, distanceKm: 0 };

@@ -10,6 +10,7 @@ import { applyMethod } from "@/lib/apply-method";
 import type { Eligibility } from "@/lib/geo";
 import { LocationBadge } from "./location-badge";
 import { JobActions } from "./job-actions";
+import { WorkAuthSection } from "./work-auth-section";
 
 function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string; value: string | null }) {
   if (!value) return null;
@@ -24,7 +25,7 @@ function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string;
   );
 }
 
-export function JobDetail({ job, fit, where }: { job: Job; fit: Fit; where: Eligibility | null }) {
+export function JobDetail({ job, fit, where, homeCountry }: { job: Job; fit: Fit; where: Eligibility | null; homeCountry: string }) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
   return (
     <article className="rounded-xl border bg-card">
@@ -67,6 +68,8 @@ export function JobDetail({ job, fit, where }: { job: Job; fit: Fit; where: Elig
             ))}
           </ul>
         </section>
+
+        <WorkAuthSection description={job.description} homeCountry={homeCountry} />
 
         {(job.company_description || job.company_industry || job.company_size) && (
           <section className="mb-6 rounded-lg bg-muted/50 p-4">

@@ -51,7 +51,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
   const scope = home ? (params.where ?? settings.locationScope) : "all";
   const jobs = dedupe(listJobs(filters))
     .filter((job) => !hideAccount || applyMethod(job.apply_url ?? job.url, job.apply_account).kind !== "account")
-    .map((job) => ({ job, fit: fitFor(job), where: home ? eligibility(job.location, home) : null }))
+    .map((job) => ({ job, fit: fitFor(job), where: home ? eligibility(job.location, home, job.description) : null }))
     .filter(({ where }) => {
       if (!where || scope === "all") return true;
       // "home" keeps jobs that name your country, e.g. "US only" or "Remote - US".
@@ -107,7 +107,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
           {selectedJob && (
             // Keyed by job so switching jobs starts the panel at the top.
             <div key={selectedJob.id} className="hidden lg:block lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-xl">
-              <JobDetail job={selectedJob} fit={fitFor(selectedJob)} where={home ? eligibility(selectedJob.location, home) : null} />
+              <JobDetail homeCountry={home} job={selectedJob} fit={fitFor(selectedJob)} where={home ? eligibility(selectedJob.location, home, selectedJob.description) : null} />
             </div>
           )}
         </div>
