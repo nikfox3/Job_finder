@@ -17,7 +17,7 @@ const NAV = [
 export function AppSidebar() {
   const pathname = usePathname();
   return (
-    <aside className="sticky top-0 flex h-screen w-60 shrink-0 flex-col border-r bg-sidebar px-3 py-4">
+    <aside className="sticky top-0 print:hidden flex h-screen w-60 shrink-0 flex-col border-r bg-sidebar px-3 py-4">
       <Link href="/" className="mb-6 flex items-center gap-2 px-2">
         <span className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
           <Sparkles className="size-4" />

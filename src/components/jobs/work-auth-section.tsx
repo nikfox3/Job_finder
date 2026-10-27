@@ -1,13 +1,14 @@
 import { ShieldCheck, ShieldAlert, ShieldQuestion } from "lucide-react";
 import { countryByCode } from "@/lib/geo";
 import { hasWorkAuthSignals, readWorkAuth } from "@/lib/work-auth";
+import { cn } from "@/lib/utils";
 
 type Line = { tone: "good" | "bad" | "info"; text: string };
 
 const ICONS = { good: ShieldCheck, bad: ShieldAlert, info: ShieldQuestion };
 const TONES = { good: "text-success", bad: "text-danger", info: "text-muted-foreground" };
 
-export function WorkAuthSection({ description, homeCountry }: { description: string | null; homeCountry: string }) {
+export function WorkAuthSection({ description, homeCountry, className }: { description: string | null; homeCountry: string; className?: string }) {
   const auth = readWorkAuth(description);
   if (!hasWorkAuthSignals(auth)) return null;
 
@@ -27,7 +28,7 @@ export function WorkAuthSection({ description, homeCountry }: { description: str
   if (auth.clearance) lines.push({ tone: "info", text: "Needs a government security clearance." });
 
   return (
-    <section className="mb-6 rounded-lg border p-4">
+    <section className={cn("mb-6 rounded-lg border p-4", className)}>
       <h3 className="mb-3 text-sm font-semibold">Work authorization</h3>
       <ul className="grid gap-2 text-sm">
         {lines.map((l) => {

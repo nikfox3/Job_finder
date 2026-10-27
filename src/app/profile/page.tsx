@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { getProfile } from "@/lib/profile";
 import { updateProfile } from "@/app/actions/profile";
+import { listAnswers } from "@/lib/answers";
+import { AnswerBank } from "@/components/apply/answer-bank";
 
 export const dynamic = "force-dynamic";
 
@@ -64,6 +66,15 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
       </form>
+      <Card id="answers" className="mt-6 scroll-mt-8">
+        <CardHeader>
+          <CardTitle>Answer bank</CardTitle>
+          <CardDescription>Answers to questions most applications ask. They show up ready to copy in each job&apos;s apply kit.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <AnswerBank initial={listAnswers()} />
+        </CardContent>
+      </Card>
     </>
   );
 }

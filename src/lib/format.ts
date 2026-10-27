@@ -53,3 +53,8 @@ export function timeAgoPrecise(sqlDate: string | null) {
   const days = Math.floor(minutes / 1440);
   return `${days} ${days === 1 ? "day" : "days"} ago`;
 }
+
+/** "https://www.nikfox.design/" -> "nikfox.design", for printing links. */
+export function displayUrl(url: string | null | undefined) {
+  return (url ?? "").replace(/^https?:\/\//i, "").replace(/^www\./i, "").replace(/\/$/, "");
+}

@@ -17,8 +17,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeProvider>
           <div className="flex min-h-screen">
             <AppSidebar />
-            <main className="flex-1 px-10 py-8">
-              <div className="mx-auto max-w-6xl">{children}</div>
+            <main className="flex-1 px-10 py-8 print:p-0">
+              <div className="mx-auto max-w-6xl print:max-w-none">{children}</div>
             </main>
           </div>
         </ThemeProvider>
