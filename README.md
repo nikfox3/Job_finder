@@ -62,6 +62,10 @@ Jobs refresh when the app starts and every 3 hours while it runs, or when you pr
 | Arbeitnow | Mostly European roles (off by default) |
 | Company watchlist | Any company hiring through Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee or Breezy. Add their careers link in Settings |
 
+### Agencies
+
+The **Agencies** tab lists creative staffing agencies (Aquent, Creative Circle, Robert Half and others) and design studios (MetaLab, Superside, IDEO and others), with what they do and any of their roles already in your feed. Jobs posted by an agency get a tag across the app, and the Jobs filters can show agencies only or hide staffing agencies. You can add your own agencies, and watch a studio's careers page to pull its openings in.
+
 ### Closed and stale postings
 
 Postings that come down from a watched company's careers page are marked closed and hidden. Each refresh also re-opens a few week-old postings (at most once a day each, jobs on your board first) and marks them closed if the page is gone or says the role is filled. Closed jobs on your board stay visible with a "Posting closed" tag. Postings over a month old are tagged, since they're often already filled or ghost jobs.

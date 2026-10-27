@@ -21,12 +21,39 @@ export async function addCompanyAction(_prev: CompanyState, form: FormData): Pro
   const { companies } = getSettings();
   if (companies.some((c) => c.ats === parsed.ats && c.slug === parsed.slug)) return { error: `${name} is already on your list.` };
   saveSettings({ companies: [...companies, { ...parsed, name }] });
-  revalidatePath("/settings");
+  revalidatePath("/", "layout");
   return { error: null };
 }
 
 export async function removeCompanyAction(ats: string, slug: string) {
   const { companies } = getSettings();
   saveSettings({ companies: companies.filter((c) => !(c.ats === ats && c.slug === slug)) });
-  revalidatePath("/settings");
+  revalidatePath("/", "layout");
+}
+
+export type AgencyState = { error: string | null; ok?: number };
+
+export async function addAgencyAction(prev: AgencyState, form: FormData): Promise<AgencyState> {
+  const name = String(form.get("name") ?? "").trim();
+  const kind = form.get("kind") === "staffing" ? "staffing" : "studio";
+  let website = String(form.get("website") ?? "").trim();
+  if (!name) return { error: "Add the agency's name." };
+  if (website && !/^https?:\/\//.test(website)) website = `https://${website}`;
+  try {
+    if (website) new URL(website);
+  } catch {
+    return { error: "That website link doesn't look right." };
+  }
+  const note = String(form.get("note") ?? "").trim() || undefined;
+  const { agencies } = getSettings();
+  const rest = agencies.filter((a) => a.name.toLowerCase() !== name.toLowerCase());
+  saveSettings({ agencies: [...rest, { name, kind, website, note }] });
+  revalidatePath("/", "layout");
+  return { error: null, ok: (prev.ok ?? 0) + 1 };
+}
+
+export async function removeAgencyAction(name: string) {
+  const { agencies } = getSettings();
+  saveSettings({ agencies: agencies.filter((a) => a.name !== name) });
+  revalidatePath("/", "layout");
 }

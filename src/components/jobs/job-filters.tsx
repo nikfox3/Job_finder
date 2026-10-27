@@ -82,6 +82,12 @@ export function JobFilters({
         <option value="any">Any application</option>
         <option value="none">No account needed</option>
       </select>
+      <select className={selectClass} aria-label="Agencies" value={params.get("agency") ?? ""} onChange={(e) => set("agency", e.target.value)}>
+        <option value="">Any employer</option>
+        <option value="only">Agencies only</option>
+        <option value="no-staffing">Hide staffing agencies</option>
+        {params.get("agency") && !["only", "no-staffing"].includes(params.get("agency")!) && <option value={params.get("agency")!}>{params.get("agency")}</option>}
+      </select>
       <select className={selectClass} value={params.get("sort") ?? ""} onChange={(e) => set("sort", e.target.value)}>
         <option value="">Newest first</option>
         <option value="fit">Best fit first</option>
