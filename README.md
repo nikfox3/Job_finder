@@ -28,15 +28,16 @@ npm start
 | --- | --- |
 | Overview | Stats and a getting-started checklist |
 | Jobs | Remote design jobs from several boards, with search, filters, a fit score and "account required" tags. Add LinkedIn, Indeed or any other job by pasting its link |
+| Apply kit | Opens from any job. Your details and saved answers ready to copy, plus a cover letter and resume for that job you can edit and save as a PDF |
 | Applications | Kanban board: Saved, Applying, Applied, Interview, Offer, Closed |
-| Profile | Your details and resume, reused to prefill applications |
-| Settings | Auto-submit toggle (off by default), search keywords, remote only, hide account-required jobs, job sources, company watchlist |
+| Profile | Your details, resume and answer bank (work authorization, salary, start date and so on), reused in every apply kit |
+| Settings | Auto-submit toggle (off by default), search keywords, remote only, hide account-required jobs, job sources, company watchlist, optional Anthropic API key |
 
 ## Roadmap
 
 1. App shell, local database, settings ✅
 2. Remote design job feeds and LinkedIn / Indeed link import ✅
-3. Apply flow: prefilled answers, tailored cover letters, optional auto-submit
+3. Apply kit: answer bank, cover letters, printable resumes, optional AI writing ✅
 4. Polish: stats, follow-up reminders, optional AI fit score
 
 ## Job sources
@@ -64,6 +65,12 @@ To preview the layout with made-up listings: start the app once, then run `npm r
 npm test        # parser and refresh tests (no network needed)
 npm run lint
 ```
+
+## AI writing (optional)
+
+Everything works without AI: cover letters start from a short template with [bracketed] notes for you to fill in, and the resume starts as a copy of the one on your Profile.
+
+To have Claude draft a tailored cover letter or resume for each job, add an Anthropic API key in Settings (or set `ANTHROPIC_API_KEY`). The key is stored only in your local database. Drafts use only facts from your resume and profile, and each one costs a few cents. If the model declines a request, the API retries it on a fallback model automatically.
 
 ## Data
 

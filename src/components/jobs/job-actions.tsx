@@ -1,12 +1,15 @@
 "use client";
 
+import Link from "next/link";
 import { useTransition } from "react";
-import { Bookmark, CheckCircle2, ExternalLink, Send } from "lucide-react";
+import { Bookmark, CheckCircle2, ClipboardList, ExternalLink, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { setStatusAction, startApplyAction, toggleSaveAction } from "@/app/actions/applications";
 import { STATUS_LABELS, type Status } from "@/lib/status";
 
-export function JobActions({ jobId, status, applyUrl, sourceUrl, sourceName }: { jobId: number; status: Status | null; applyUrl: string; sourceUrl: string; sourceName: string }) {
+type Props = { jobId: number; status: Status | null; applyUrl: string; sourceUrl: string; sourceName: string; showKit?: boolean };
+
+export function JobActions({ jobId, status, applyUrl, sourceUrl, sourceName, showKit = true }: Props) {
   const [pending, start] = useTransition();
   const applied = status !== null && !["saved", "applying"].includes(status);
 
@@ -29,6 +32,13 @@ export function JobActions({ jobId, status, applyUrl, sourceUrl, sourceName }: {
           <a href={applyUrl} target="_blank" rel="noreferrer">
             <Send /> Open application
           </a>
+        </Button>
+      )}
+      {showKit && (
+        <Button variant="outline" asChild>
+          <Link href={`/jobs/${jobId}/apply`}>
+            <ClipboardList /> Apply kit
+          </Link>
         </Button>
       )}
       {!applied && status !== "applying" && (

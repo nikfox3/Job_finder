@@ -83,14 +83,34 @@ const MIGRATIONS: string[] = [
   );
   CREATE INDEX jobs_posted_at ON jobs (posted_at);
   `,
+  `
+  CREATE TABLE answers (
+    id        INTEGER PRIMARY KEY AUTOINCREMENT,
+    question  TEXT NOT NULL,
+    answer    TEXT NOT NULL DEFAULT '',
+    position  INTEGER NOT NULL DEFAULT 0
+  );
+  INSERT INTO answers (question, position) VALUES
+    ('Are you legally authorized to work in the United States?', 1),
+    ('Will you now or in the future require visa sponsorship?', 2),
+    ('What are your salary expectations?', 3),
+    ('When can you start?', 4),
+    ('How many years of design experience do you have?', 5),
+    ('What time zone do you work in?', 6),
+    ('Are you willing to relocate?', 7),
+    ('How did you hear about this role?', 8);
+
+  CREATE TABLE documents (
+    job_id      INTEGER NOT NULL REFERENCES jobs(id) ON DELETE CASCADE,
+    kind        TEXT NOT NULL CHECK (kind IN ('cover_letter','resume')),
+    content     TEXT NOT NULL,
+    updated_at  TEXT NOT NULL DEFAULT (datetime('now')),
+    PRIMARY KEY (job_id, kind)
+  );
+  `,
 ];
 
-function open() {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  const db = new Database(DB_PATH);
-  db.pragma("journal_mode = WAL");
-  db.pragma("foreign_keys = ON");
-
+function migrate(db: Database.Database) {
   // IMMEDIATE takes the write lock before reading the version, so parallel
   // processes (e.g. Next.js build workers) can't apply the same migration twice.
   db.transaction(() => {
@@ -101,7 +121,16 @@ function open() {
   return db;
 }
 
+function open() {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+  const db = new Database(DB_PATH);
+  db.pragma("journal_mode = WAL");
+  db.pragma("foreign_keys = ON");
+  return migrate(db);
+}
+
 // Reuse one connection across hot reloads in dev.
 const globalForDb = globalThis as unknown as { careerOpsDb?: Database.Database };
-export const db = globalForDb.careerOpsDb ?? open();
+// A reused connection still gets any migrations added since it was opened.
+export const db = globalForDb.careerOpsDb ? migrate(globalForDb.careerOpsDb) : open();
 if (process.env.NODE_ENV !== "production") globalForDb.careerOpsDb = db;

@@ -34,7 +34,8 @@ export const DEFAULT_SETTINGS: Settings = {
 };
 
 export function getSettings(): Settings {
-  const rows = db.prepare("SELECT key, value FROM settings").all() as { key: string; value: string }[];
+  // Secrets live in the same table but never travel with the settings object.
+  const rows = db.prepare("SELECT key, value FROM settings WHERE key NOT LIKE 'secret:%'").all() as { key: string; value: string }[];
   const stored = Object.fromEntries(rows.map((r) => [r.key, JSON.parse(r.value)]));
   return {
     ...DEFAULT_SETTINGS,
@@ -54,4 +55,15 @@ export function saveSettings(patch: Partial<Settings>) {
 
 export function keywordList(settings: Settings) {
   return settings.keywords.split(",").map((k) => k.trim()).filter(Boolean);
+}
+
+/** Local secrets, such as your Anthropic API key. Server-only; never sent to the browser. */
+export function getSecret(name: string): string | null {
+  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(`secret:${name}`) as { value: string } | undefined;
+  return row ? (JSON.parse(row.value) as string) : null;
+}
+
+export function setSecret(name: string, value: string | null) {
+  if (value) saveSettings({ [`secret:${name}`]: value } as Partial<Settings>);
+  else db.prepare("DELETE FROM settings WHERE key = ?").run(`secret:${name}`);
 }

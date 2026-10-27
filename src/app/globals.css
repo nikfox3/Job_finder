@@ -87,3 +87,8 @@
 .job-html li + li { margin-top: 0.25rem; }
 .job-html a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
 .job-html strong, .job-html b { font-weight: 600; color: var(--foreground); }
+
+@media print {
+  @page { margin: 0.6in; }
+  html, body { background: white !important; }
+}
