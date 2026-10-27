@@ -1,6 +1,5 @@
-import { Bookmark, Briefcase, Building2, Check, Clock, ExternalLink, Globe2, MapPin, Send, Users, Wallet, X } from "lucide-react";
+import { Briefcase, Building2, Check, Clock, Globe2, MapPin, Users, Wallet, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { formatSalary, sourceName, timeAgo } from "@/lib/format";
 import type { Job } from "@/lib/jobs";
 import type { Fit } from "@/lib/fit";
@@ -10,6 +9,7 @@ import { ApplyMethodBadge } from "./apply-method-badge";
 import { applyMethod } from "@/lib/apply-method";
 import type { Eligibility } from "@/lib/geo";
 import { LocationBadge } from "./location-badge";
+import { JobActions } from "./job-actions";
 
 function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string; value: string | null }) {
   if (!value) return null;
@@ -27,7 +27,7 @@ function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string;
 export function JobDetail({ job, fit, where }: { job: Job; fit: Fit; where: Eligibility | null }) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
   return (
-    <article className="flex h-full flex-col rounded-xl border bg-card">
+    <article className="rounded-xl border bg-card">
       <header className="border-b p-6">
         <div className="flex items-start gap-4">
           <CompanyLogo name={job.company} className="size-12 text-base" />
@@ -40,19 +40,7 @@ export function JobDetail({ job, fit, where }: { job: Job; fit: Fit; where: Elig
             <span className="text-xs text-muted-foreground">Fit</span>
           </div>
         </div>
-        <div className="mt-5 flex flex-wrap gap-2">
-          <Button>
-            <Send /> Apply
-          </Button>
-          <Button variant="outline">
-            <Bookmark className={job.status ? "fill-current" : ""} /> {job.status ? "Saved" : "Save"}
-          </Button>
-          <Button variant="ghost" asChild>
-            <a href={job.url} target="_blank" rel="noreferrer">
-              <ExternalLink /> View on {sourceName(job.source)}
-            </a>
-          </Button>
-        </div>
+        <JobActions jobId={job.id} status={job.status} applyUrl={job.apply_url ?? job.url} sourceUrl={job.url} sourceName={sourceName(job.source)} />
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
           {where && <LocationBadge eligibility={where} />}
           <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url, job.apply_account)} showPlatform />
@@ -67,7 +55,7 @@ export function JobDetail({ job, fit, where }: { job: Job; fit: Fit; where: Elig
         <Fact icon={Clock} label="Posted" value={timeAgo(job.posted_at)} />
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="p-6">
         <section className="mb-6 rounded-lg border p-4">
           <h3 className="mb-3 text-sm font-semibold">Why it fits</h3>
           <ul className="grid gap-2 text-sm sm:grid-cols-2">

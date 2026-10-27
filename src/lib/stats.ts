@@ -1,16 +1,9 @@
 import "server-only";
 import { db } from "./db";
 
-export const STATUSES = [
-  { id: "saved", label: "Saved" },
-  { id: "applying", label: "Applying" },
-  { id: "applied", label: "Applied" },
-  { id: "interview", label: "Interview" },
-  { id: "offer", label: "Offer" },
-  { id: "rejected", label: "Closed" },
-] as const;
+import { STATUSES, type Status } from "./status";
 
-export type Status = (typeof STATUSES)[number]["id"];
+export { STATUSES, type Status };
 
 export function getStats() {
   const jobs = (db.prepare("SELECT COUNT(*) AS n FROM jobs").get() as { n: number }).n;

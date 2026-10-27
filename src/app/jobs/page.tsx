@@ -101,7 +101,8 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
             ))}
           </div>
           {selectedJob && (
-            <div className="hidden lg:sticky lg:top-8 lg:block lg:h-[calc(100vh-13rem)]">
+            // Keyed by job so switching jobs starts the panel at the top.
+            <div key={selectedJob.id} className="hidden lg:block lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-xl">
               <JobDetail job={selectedJob} fit={fitFor(selectedJob)} where={home ? eligibility(selectedJob.location, home) : null} />
             </div>
           )}
