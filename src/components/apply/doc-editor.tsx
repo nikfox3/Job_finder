@@ -5,7 +5,9 @@ import { useState, useTransition } from "react";
 import { FileDown, FileText, Loader2, RotateCcw, Save, Sparkles, TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { draftDocumentAction, resetDocumentAction, saveDocumentAction } from "@/app/actions/apply";
+import { coverLetterQuestionsAction, draftDocumentAction, resetDocumentAction, saveDocumentAction } from "@/app/actions/apply";
+import type { Fact, QuickQuestion } from "@/lib/ai";
+import { QuickQuestions } from "./quick-questions";
 import type { DocKind } from "@/lib/documents";
 import { findPlaceholders } from "@/lib/letters";
 
@@ -29,7 +31,8 @@ export function DocEditor({ jobId, kind, title, description, initial, hasAi, blo
   const [text, setText] = useState(initial ?? "");
   const [saved, setSaved] = useState(initial ?? "");
   const [error, setError] = useState<string | null>(null);
-  const [writing, setWriting] = useState<"ai" | "template" | null>(null);
+  const [writing, setWriting] = useState<"asking" | "ai" | "template" | null>(null);
+  const [questions, setQuestions] = useState<QuickQuestion[] | null>(null);
   const [pending, start] = useTransition();
   const copy = COPY[kind];
   const dirty = text !== saved;
@@ -40,16 +43,35 @@ export function DocEditor({ jobId, kind, title, description, initial, hasAi, blo
   function draft(useAi: boolean) {
     if (dirty && text && !confirm("Replace your edits with a new draft?")) return;
     setError(null);
+    // AI cover letters first check for a few quick questions worth asking you.
+    if (useAi && kind === "cover_letter") {
+      setWriting("asking");
+      start(async () => {
+        const result = await coverLetterQuestionsAction(jobId);
+        if (result.error) {
+          setWriting(null);
+          setError(result.error);
+        } else if (result.questions.length) {
+          setWriting(null);
+          setQuestions(result.questions);
+        } else {
+          await write(true, []);
+        }
+      });
+      return;
+    }
+    start(() => write(useAi, []));
+  }
+
+  async function write(useAi: boolean, facts: Fact[]) {
     setWriting(useAi ? "ai" : "template");
-    start(async () => {
-      const result = await draftDocumentAction(jobId, kind, useAi);
-      setWriting(null);
-      if (result.error) setError(result.error);
-      if (result.content !== null) {
-        setText(result.content);
-        setSaved(result.content);
-      }
-    });
+    const result = await draftDocumentAction(jobId, kind, useAi, facts);
+    setWriting(null);
+    if (result.error) setError(result.error);
+    if (result.content !== null) {
+      setText(result.content);
+      setSaved(result.content);
+    }
   }
 
   function save() {
@@ -84,6 +106,14 @@ export function DocEditor({ jobId, kind, title, description, initial, hasAi, blo
       <CardContent className="grid gap-3">
         {blocked ? (
           blocked
+        ) : questions ? (
+          <QuickQuestions
+            questions={questions}
+            onDone={(facts) => {
+              setQuestions(null);
+              start(() => write(true, facts));
+            }}
+          />
         ) : !text && !writing ? (
           <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed px-6 py-8 text-center">
             <FileText className="size-6 text-muted-foreground" />
@@ -109,9 +139,10 @@ export function DocEditor({ jobId, kind, title, description, initial, hasAi, blo
           </div>
         ) : (
           <>
-            {writing === "ai" ? (
+            {writing === "ai" || writing === "asking" ? (
               <div className="flex min-h-80 items-center justify-center gap-2 rounded-md border bg-muted/30 text-sm text-muted-foreground">
-                <Loader2 className="size-4 animate-spin" /> Writing your draft. This usually takes under a minute.
+                <Loader2 className="size-4 animate-spin" />
+                {writing === "asking" ? "Reading the job posting…" : "Writing your draft. This usually takes under a minute."}
               </div>
             ) : (
               <textarea

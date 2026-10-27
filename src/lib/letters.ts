@@ -20,30 +20,47 @@ function list(items: string[]) {
   return items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
 
+/** The resume bullet that best shows a skill this job asks for, or the first one. */
+export function bestBullet(job: JobLike, profile: ProfileLike) {
+  const bullets = (profile.resume_text ?? "")
+    .split("\n")
+    .filter((l) => BULLET.test(l))
+    .map((l) => l.replace(BULLET, "").trim().replace(/\.$/, ""));
+  const skills = job.tags.map((t) => t.toLowerCase());
+  return bullets.find((b) => skills.some((s) => b.toLowerCase().includes(s))) ?? bullets[0] ?? null;
+}
+
+/** "Built a design system" -> "built a design system", but leaves "UX audits" alone. */
+function lowerFirst(text: string) {
+  return /^[A-Z][a-z]/.test(text) ? text[0].toLowerCase() + text.slice(1) : text;
+}
+
 /**
  * A short, honest cover letter built only from your profile and the posting.
- * Anything it can't know is left as a [bracketed] note to fill in.
+ * It never leaves blanks: anything it doesn't know is simply left out.
  */
 export function coverLetterTemplate(job: JobLike, profile: ProfileLike) {
   const headline = profile.headline?.trim();
   const article = headline && /^[aeiou]/i.test(headline) ? "an" : "a";
   const skills = matchedSkills(job, profile);
+  const example = bestBullet(job, profile);
   const portfolio = displayUrl(profile.portfolio_url);
 
   const intro = `I'm writing to apply for the ${job.title} role at ${job.company}.${headline ? ` I'm ${article} ${headline}, and this role is a strong match for the work I do best.` : ""}`;
-  const middle = skills.length
-    ? `My experience with ${list(skills)} lines up closely with what you're looking for. [Add one result from your work that shows this, ideally with a number.]`
-    : "[Add one or two results from your work that match this role, ideally with numbers.]";
-  const why = `[Why ${job.company}: one sentence about what draws you to the team or product.]`;
+  const middle = [
+    skills.length ? `My experience with ${list(skills)} lines up closely with what you're looking for.` : "My background lines up closely with the work this role involves.",
+    example && `For example, I ${lowerFirst(example)}.`,
+  ]
+    .filter(Boolean)
+    .join(" ");
   const work = portfolio ? ` You can see examples of my work at ${portfolio}.` : "";
 
   return [
     `Dear ${job.company} hiring team,`,
     intro,
     middle,
-    why,
-    `Thank you for your time. I'd welcome the chance to talk about how I can help ${job.company}.${work}`,
-    `Sincerely,\n${profile.full_name?.trim() || "[Your name]"}`,
+    `I'd love to bring that experience to ${job.company}, and I'd welcome the chance to talk about how I can help.${work}`,
+    ["Sincerely,", profile.full_name?.trim()].filter(Boolean).join("\n"),
   ].join("\n\n");
 }
 

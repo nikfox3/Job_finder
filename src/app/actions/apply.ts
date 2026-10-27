@@ -8,11 +8,19 @@ import { getProfile } from "@/lib/profile";
 import { getStatus, setStatus } from "@/lib/applications";
 import { setSecret } from "@/lib/settings";
 import { coverLetterTemplate } from "@/lib/letters";
-import { answerQuestion, tailorResume, writeCoverLetter, type AnswerLength } from "@/lib/ai";
+import { answerQuestion, coverLetterQuestions, tailorResume, writeCoverLetter, type AnswerLength, type Fact, type QuickQuestion } from "@/lib/ai";
 
 export async function saveAnswersAction(rows: { question: string; answer: string }[]) {
   saveAnswers(rows.map((r) => ({ question: r.question.trim(), answer: r.answer.trim() })).filter((r) => r.question));
   revalidatePath("/", "layout");
+}
+
+/** Quick answers go into the answer bank so later letters don't ask again. */
+function rememberAnswers(answers: Fact[]) {
+  const known = new Set(listAnswers().map((a) => a.question.trim().toLowerCase()));
+  for (const a of answers) {
+    if (a.answer.trim() && !known.has(a.question.trim().toLowerCase())) addAnswer(a.question.trim(), a.answer.trim());
+  }
 }
 
 /** Keeps the job (and its documents) from being cleaned up with old listings. */
@@ -34,7 +42,7 @@ export async function resetDocumentAction(jobId: number, kind: DocKind) {
 
 export type DraftResult = { content: string | null; error: string | null };
 
-export async function draftDocumentAction(jobId: number, kind: DocKind, useAi: boolean): Promise<DraftResult> {
+export async function draftDocumentAction(jobId: number, kind: DocKind, useAi: boolean, quickAnswers: Fact[] = []): Promise<DraftResult> {
   const job = getJob(jobId);
   if (!job || !DOC_KINDS.includes(kind)) return { content: null, error: "This job is no longer saved." };
   const profile = getProfile();
@@ -42,13 +50,14 @@ export async function draftDocumentAction(jobId: number, kind: DocKind, useAi: b
   try {
     const content = useAi
       ? kind === "cover_letter"
-        ? await writeCoverLetter(job, profile)
+        ? await writeCoverLetter(job, profile, [...listAnswers(), ...quickAnswers])
         : await tailorResume(job, profile)
       : kind === "cover_letter"
         ? coverLetterTemplate(job, profile)
         : (profile.resume_text ?? "");
     saveDocument(jobId, kind, content);
     keep(jobId);
+    rememberAnswers(quickAnswers);
     revalidatePath(`/jobs/${jobId}`, "layout");
     return { content, error: null };
   } catch (error) {
@@ -81,4 +90,18 @@ export async function addAnswerAction(question: string, answer: string) {
   if (!question.trim() || !answer.trim()) return;
   addAnswer(question.trim(), answer.trim());
   revalidatePath("/", "layout");
+}
+
+export type QuestionsResult = { questions: QuickQuestion[]; error: string | null };
+
+/** The few quick questions worth asking before an AI cover letter (often none). */
+export async function coverLetterQuestionsAction(jobId: number): Promise<QuestionsResult> {
+  const job = getJob(jobId);
+  if (!job) return { questions: [], error: "This job is no longer saved." };
+  const profile = getProfile();
+  try {
+    return { questions: await coverLetterQuestions(job, profile, listAnswers()), error: null };
+  } catch (error) {
+    return { questions: [], error: error instanceof Error ? error.message : "Something went wrong." };
+  }
 }

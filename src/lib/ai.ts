@@ -13,7 +13,14 @@ export function aiKey() {
   return getSecret("anthropic_api_key") ?? process.env.ANTHROPIC_API_KEY ?? null;
 }
 
-const RULES = `Use only facts found in the resume and profile. Never invent employers, job titles, dates, numbers, tools or skills. If a useful detail is missing, leave a short [bracketed note] telling the candidate what to add. Write plain text with no markdown.`;
+const RULES = `Use only facts found in the resume, profile and the candidate's answers. Never invent employers, job titles, dates, numbers, tools or skills. If a detail is missing, write around it using what you do have; never leave blanks, brackets or placeholders for the candidate to fill in. Write plain text with no markdown.`;
+
+export type Fact = { question: string; answer: string };
+
+function factsBlock(facts: Fact[]) {
+  const known = facts.filter((f) => f.answer.trim()).map((f) => `Q: ${f.question}\nA: ${f.answer}`);
+  return known.length ? `\n\n<candidate_answers>\n${known.join("\n\n")}\n</candidate_answers>` : "";
+}
 
 function context(job: Job, profile: Profile) {
   const description = htmlToText(job.description ?? "").slice(0, 12000);
@@ -40,7 +47,7 @@ ${profile.resume_text ?? ""}
 </resume>`;
 }
 
-async function write(system: string, prompt: string) {
+async function write(system: string, prompt: string, schema?: Record<string, unknown>) {
   const apiKey = aiKey();
   if (!apiKey) throw new Error("Add your Anthropic API key in Settings to use AI writing.");
   const client = new Anthropic({ apiKey });
@@ -48,7 +55,7 @@ async function write(system: string, prompt: string) {
     const response = await client.beta.messages.create({
       model: MODEL,
       max_tokens: 8000,
-      output_config: { effort: "medium" },
+      output_config: schema ? { effort: "medium", format: { type: "json_schema", schema } } : { effort: "medium" },
       // If the model declines, the API retries on Anthropic's recommended fallback model.
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",
@@ -80,7 +87,7 @@ function preferences() {
     : "";
 }
 
-export function writeCoverLetter(job: Job, profile: Profile) {
+export function writeCoverLetter(job: Job, profile: Profile, facts: Fact[] = []) {
   return write(
     `You write cover letters for a job seeker. Each letter is about one specific job: a hiring manager should be able to tell from the letter alone which role and company it was written for.
 
@@ -98,7 +105,7 @@ Then write the letter:
 - Plain, confident and conversational, with short sentences. Avoid stock phrases such as ${CLICHES.map((c) => `"${c}"`).join(", ")}.
 - ${RULES}
 - Start with "Dear ${job.company} hiring team," and end with "Sincerely," followed by the candidate's name. Return only the letter.${preferences()}`,
-    `${context(job, profile)}\n\nWrite a cover letter for the ${job.title} role at ${job.company}.`,
+    `${context(job, profile)}${factsBlock(facts)}\n\nWrite a cover letter for the ${job.title} role at ${job.company}.`,
   );
 }
 
@@ -117,10 +124,45 @@ const LENGTHS: Record<AnswerLength, string> = {
 };
 
 /** Drafts an answer to one application question, in the candidate's own voice. */
-export function answerQuestion(job: Job, profile: Profile, question: string, length: AnswerLength, saved: { question: string; answer: string }[]) {
-  const facts = saved.filter((a) => a.answer).map((a) => `Q: ${a.question}\nA: ${a.answer}`);
+export function answerQuestion(job: Job, profile: Profile, question: string, length: AnswerLength, saved: Fact[]) {
   return write(
     `You help a job seeker answer questions on job applications. ${RULES} Write in the first person, in a natural, confident voice, as the candidate. Answer the question directly, connect it to this job where it fits, and use a specific example from the resume when one applies. Keep it to ${LENGTHS[length]}. Return only the answer.${preferences()}`,
-    `${context(job, profile)}${facts.length ? `\n\n<saved_answers>\n${facts.join("\n\n")}\n</saved_answers>` : ""}\n\n<question>\n${question}\n</question>`,
+    `${context(job, profile)}${factsBlock(saved)}\n\n<question>\n${question}\n</question>`,
   );
+}
+
+export type QuickQuestion = { question: string; type: "yes_no" | "short" };
+
+const QUESTIONS_SCHEMA = {
+  type: "object",
+  properties: {
+    questions: {
+      type: "array",
+      items: {
+        type: "object",
+        properties: { question: { type: "string" }, type: { type: "string", enum: ["yes_no", "short"] } },
+        required: ["question", "type"],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ["questions"],
+  additionalProperties: false,
+};
+
+/**
+ * Before writing a cover letter, finds up to 3 quick facts worth asking the
+ * candidate for: things the posting stresses that the resume doesn't cover.
+ * Usually returns none.
+ */
+export async function coverLetterQuestions(job: Job, profile: Profile, facts: Fact[]): Promise<QuickQuestion[]> {
+  const text = await write(
+    `You are about to write a cover letter for a job seeker. First, decide whether a few quick facts from them would make the letter clearly stronger for this specific job.
+
+Compare the posting's top priorities with the resume and the candidate's answers. Only ask about something the posting stresses that those don't already cover, such as a tool, a domain or a type of work. Each question must be answerable with yes or no, or in a few words, for example "Have you used Framer?" or "Have you designed for healthcare products?". Never ask for stories, descriptions, numbers they would need to look up, or anything already answered. Ask at most 3 questions, and ask none if the resume already covers the main priorities.`,
+    `${context(job, profile)}${factsBlock(facts)}`,
+    QUESTIONS_SCHEMA,
+  );
+  const parsed = JSON.parse(text) as { questions: QuickQuestion[] };
+  return parsed.questions.slice(0, 3);
 }

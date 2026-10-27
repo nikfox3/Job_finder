@@ -7,7 +7,7 @@ const profile = {
   full_name: "Nik Fox",
   headline: "Senior Product Designer",
   portfolio_url: "https://Nikfox.design",
-  resume_text: "Built design systems in Figma for 40 teams.",
+  resume_text: "Built design systems in Figma for 40 teams.\n- Ran weekly user interviews\n- Built the Figma component library used by 6 teams.",
 };
 
 describe("coverLetterTemplate", () => {
@@ -28,11 +28,16 @@ describe("coverLetterTemplate", () => {
     expect(letter.endsWith("Sincerely,\nNik Fox")).toBe(true);
   });
 
-  it("leaves bracketed notes for what it can't know", () => {
-    expect(findPlaceholders(letter)).toHaveLength(2);
+  it("backs the claim with the resume bullet that matches the job", () => {
+    expect(letter).toContain("For example, I built the Figma component library used by 6 teams.");
+  });
+
+  it("never leaves blanks, even with an empty profile", () => {
+    expect(findPlaceholders(letter)).toEqual([]);
     const bare = coverLetterTemplate(job, { full_name: null, headline: null, portfolio_url: null, resume_text: null });
-    expect(bare).toContain("[Your name]");
+    expect(findPlaceholders(bare)).toEqual([]);
     expect(bare).not.toContain("I'm a");
+    expect(bare.endsWith("Sincerely,")).toBe(true);
   });
 
   it("uses 'an' before a vowel", () => {

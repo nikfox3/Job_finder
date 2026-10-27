@@ -72,3 +72,24 @@ describe("answerQuestion", () => {
     expect(params.messages[0].content).not.toContain("Start date?");
   });
 });
+
+describe("coverLetterQuestions", () => {
+  beforeEach(() => create.mockReset());
+
+  it("requests structured output and caps the list at 3", async () => {
+    const { coverLetterQuestions } = await import("@/lib/ai");
+    const qs = [1, 2, 3, 4].map((n) => ({ question: `Q${n}?`, type: "yes_no" }));
+    create.mockResolvedValue({ stop_reason: "end_turn", content: [{ type: "text", text: JSON.stringify({ questions: qs }) }] });
+    await expect(coverLetterQuestions(job, profile, [{ question: "Used Framer?", answer: "Yes" }])).resolves.toHaveLength(3);
+    const params = create.mock.calls[0][0];
+    expect(params.output_config.format.type).toBe("json_schema");
+    expect(params.messages[0].content).toContain("A: Yes");
+  });
+
+  it("passes quick answers into the letter", async () => {
+    create.mockResolvedValue({ stop_reason: "end_turn", content: [{ type: "text", text: "Dear Acme hiring team," }] });
+    await writeCoverLetter(job, profile, [{ question: "Have you used Framer?", answer: "Yes, daily" }]);
+    expect(create.mock.calls[0][0].messages[0].content).toContain("Q: Have you used Framer?\nA: Yes, daily");
+    expect(create.mock.calls[0][0].system).toContain("never leave blanks");
+  });
+});
