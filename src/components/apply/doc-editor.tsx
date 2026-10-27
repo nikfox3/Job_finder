@@ -34,6 +34,7 @@ export function DocEditor({ jobId, kind, title, description, initial, hasAi, blo
   const copy = COPY[kind];
   const dirty = text !== saved;
   const notes = findPlaceholders(text);
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
   const printHref = `/jobs/${jobId}/print/${kind === "cover_letter" ? "cover-letter" : "resume"}`;
 
   function draft(useAi: boolean) {
@@ -120,6 +121,11 @@ export function DocEditor({ jobId, kind, title, description, initial, hasAi, blo
                 className="min-h-80 w-full rounded-md border border-input bg-transparent p-3 text-sm leading-relaxed shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
                 style={{ fieldSizing: "content" } as React.CSSProperties}
               />
+            )}
+            {kind === "cover_letter" && !writing && (
+              <p className={`-mt-1 text-right text-xs ${words > 220 ? "text-warning" : "text-muted-foreground"}`}>
+                {words} words{words > 220 ? ". Most hiring managers prefer under 200." : ""}
+              </p>
             )}
             {notes.length > 0 && !writing && (
               <p className="flex items-start gap-2 rounded-md bg-warning/10 px-3 py-2 text-xs text-warning">

@@ -18,6 +18,8 @@ export type Settings = {
   /** Default location filter: only jobs that name your country, jobs you can take, or everything. */
   locationScope: LocationScope;
   keywords: string;
+  /** Your own rules for AI writing, e.g. tone or things to always mention. */
+  writingGuide: string;
   sources: Record<string, boolean>;
   companies: WatchedCompany[];
 };
@@ -29,6 +31,7 @@ export const DEFAULT_SETTINGS: Settings = {
   homeCountry: "",
   locationScope: "open",
   keywords: "product designer, ux designer, ui designer",
+  writingGuide: "",
   sources: Object.fromEntries(SOURCES.map((s) => [s.id, s.defaultEnabled])),
   companies: [],
 };

@@ -2,7 +2,7 @@ import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
 import type { Job } from "./jobs";
 import type { Profile } from "./profile";
-import { getSecret } from "./settings";
+import { getSecret, getSettings } from "./settings";
 import { htmlToText } from "./work-auth";
 import { displayUrl } from "./format";
 
@@ -70,10 +70,35 @@ async function write(system: string, prompt: string) {
   }
 }
 
+const CLICHES = ["I am excited to apply", "I am writing to express my interest", "passionate", "dynamic", "fast-paced", "team player", "perfect fit", "leverage", "synergy", "proven track record"];
+
+/** Your own writing rules from Settings, applied after the honesty rules. */
+function preferences() {
+  const guide = getSettings().writingGuide.trim();
+  return guide
+    ? `\n\n<candidate_preferences>\n${guide}\n</candidate_preferences>\nFollow these preferences unless they conflict with the rule against inventing facts.`
+    : "";
+}
+
 export function writeCoverLetter(job: Job, profile: Profile) {
   return write(
-    `You write cover letters for a job seeker. ${RULES} Keep it under 250 words in 3 or 4 short paragraphs. Be warm and direct, and avoid stock phrases like "I am excited to apply". Start with "Dear ${job.company} hiring team," and end with "Sincerely," followed by the candidate's name.`,
-    `${context(job, profile)}\n\nWrite a cover letter for this job.`,
+    `You write cover letters for a job seeker. Each letter is about one specific job: a hiring manager should be able to tell from the letter alone which role and company it was written for.
+
+Before writing, work out:
+1. The 2 or 3 things this posting cares about most: its main responsibilities and must-have skills, in the posting's own words.
+2. For each one, the strongest matching evidence in the resume: a project, a result or a skill.
+3. One specific detail about the company, product or team from the posting that gives a real reason to want this job.
+
+Then write the letter:
+- 120 to 180 words in total, never more than 200. A greeting, three short paragraphs and a sign-off.
+- Paragraph 1, one or two sentences: name the role and connect the candidate's main strength to what this team needs most.
+- Paragraph 2: two or three of the posting's priorities, each backed by concrete evidence from the resume. Use the posting's terms where the resume supports them.
+- Paragraph 3, one or two sentences: why this company, using the specific detail, then a simple close.
+- Don't retell the resume or list every job. Use only the evidence that matches this posting.
+- Plain, confident and conversational, with short sentences. Avoid stock phrases such as ${CLICHES.map((c) => `"${c}"`).join(", ")}.
+- ${RULES}
+- Start with "Dear ${job.company} hiring team," and end with "Sincerely," followed by the candidate's name. Return only the letter.${preferences()}`,
+    `${context(job, profile)}\n\nWrite a cover letter for the ${job.title} role at ${job.company}.`,
   );
 }
 
@@ -95,7 +120,7 @@ const LENGTHS: Record<AnswerLength, string> = {
 export function answerQuestion(job: Job, profile: Profile, question: string, length: AnswerLength, saved: { question: string; answer: string }[]) {
   const facts = saved.filter((a) => a.answer).map((a) => `Q: ${a.question}\nA: ${a.answer}`);
   return write(
-    `You help a job seeker answer questions on job applications. ${RULES} Write in the first person, in a natural, confident voice, as the candidate. Answer the question directly, connect it to this job where it fits, and use a specific example from the resume when one applies. Keep it to ${LENGTHS[length]}. Return only the answer.`,
+    `You help a job seeker answer questions on job applications. ${RULES} Write in the first person, in a natural, confident voice, as the candidate. Answer the question directly, connect it to this job where it fits, and use a specific example from the resume when one applies. Keep it to ${LENGTHS[length]}. Return only the answer.${preferences()}`,
     `${context(job, profile)}${facts.length ? `\n\n<saved_answers>\n${facts.join("\n\n")}\n</saved_answers>` : ""}\n\n<question>\n${question}\n</question>`,
   );
 }

@@ -13,12 +13,13 @@ function aiKeyStatus(): AiKeyStatus {
 }
 
 export default function SettingsPage() {
+  const settings = getSettings();
   return (
     <>
       <PageHeader title="Settings" description="Saved automatically to your local database." />
       <div className="grid max-w-3xl gap-6">
-        <SettingsForm initial={getSettings()} sources={JOB_SOURCES} />
-        <AiKeyForm status={aiKeyStatus()} />
+        <SettingsForm initial={settings} sources={JOB_SOURCES} />
+        <AiKeyForm status={aiKeyStatus()} writingGuide={settings.writingGuide} />
       </div>
     </>
   );

@@ -11,7 +11,8 @@ vi.mock("@anthropic-ai/sdk", async (importOriginal) => {
   }
   return { default: Anthropic };
 });
-vi.mock("@/lib/settings", () => ({ getSecret: () => "sk-ant-test" }));
+const settings = { writingGuide: "" };
+vi.mock("@/lib/settings", () => ({ getSecret: () => "sk-ant-test", getSettings: () => settings }));
 
 const { writeCoverLetter } = await import("@/lib/ai");
 
@@ -33,6 +34,17 @@ describe("writeCoverLetter", () => {
     expect(params).toMatchObject({ model: "claude-opus-5-5", fallbacks: "default", betas: ["server-side-fallback-2026-07-01"] });
     expect(params.messages[0].content).toContain("Design things.");
     expect(params.messages[0].content).not.toContain("<p>");
+  });
+
+  it("asks for a short letter about this job and adds your writing rules", async () => {
+    create.mockResolvedValue({ stop_reason: "end_turn", content: [{ type: "text", text: "Dear Acme hiring team," }] });
+    settings.writingGuide = "Mention I work well with engineers.";
+    await writeCoverLetter(job, profile);
+    settings.writingGuide = "";
+    const { system, messages } = create.mock.calls[0][0];
+    expect(system).toContain("never more than 200");
+    expect(system).toContain("<candidate_preferences>\nMention I work well with engineers.\n</candidate_preferences>");
+    expect(messages[0].content).toContain("the Product Designer role at Acme");
   });
 
   it("reports a refusal instead of returning partial text", async () => {

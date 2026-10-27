@@ -7,11 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { saveApiKeyAction } from "@/app/actions/apply";
+import { updateSettings } from "@/app/actions/settings";
 
 export type AiKeyStatus = { source: "settings" | "env" | null; hint: string | null };
 
-export function AiKeyForm({ status }: { status: AiKeyStatus }) {
+export function AiKeyForm({ status, writingGuide }: { status: AiKeyStatus; writingGuide: string }) {
   const [key, setKey] = useState("");
+  const [guide, setGuide] = useState(writingGuide);
+  const [savedGuide, setSavedGuide] = useState(writingGuide);
   const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
 
@@ -62,6 +65,33 @@ export function AiKeyForm({ status }: { status: AiKeyStatus }) {
             </a>
             . Each draft costs a few cents.
           </p>
+        </div>
+        <div className="grid gap-2 border-t pt-4">
+          <Label htmlFor="writingGuide">Your writing rules</Label>
+          <textarea
+            id="writingGuide"
+            value={guide}
+            onChange={(e) => setGuide(e.target.value)}
+            rows={3}
+            placeholder={"e.g. Keep it friendly but not casual.\nMention that I work well with engineers.\nNever mention my previous employer by name."}
+            className="w-full rounded-md border border-input bg-transparent p-3 text-sm shadow-xs placeholder:text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            style={{ fieldSizing: "content" } as React.CSSProperties}
+          />
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">Applied to AI cover letters and answers, on top of the built-in rules (short, specific to the job, no made-up facts).</p>
+            <Button
+              variant="outline"
+              disabled={pending || guide === savedGuide}
+              onClick={() =>
+                start(async () => {
+                  await updateSettings({ writingGuide: guide.trim() });
+                  setSavedGuide(guide);
+                })
+              }
+            >
+              Save
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
