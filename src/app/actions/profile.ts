@@ -9,6 +9,10 @@ export async function updateProfile(formData: FormData) {
     const value = formData.get(key);
     if (typeof value === "string") profile[key] = value.trim() || null;
   }
+  for (const key of ["portfolio_url", "linkedin_url"] as const) {
+    const url = profile[key];
+    if (url && !/^https?:\/\//i.test(url)) profile[key] = `https://${url}`;
+  }
   saveProfile(profile);
   revalidatePath("/profile");
   revalidatePath("/");
