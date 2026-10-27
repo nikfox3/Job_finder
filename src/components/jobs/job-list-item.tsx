@@ -12,8 +12,24 @@ import type { Eligibility } from "@/lib/geo";
 import { LocationBadge } from "./location-badge";
 import { FreshnessBadge } from "./freshness-badge";
 import { freshness } from "@/lib/freshness";
+import type { Agency } from "@/lib/agencies";
+import { AgencyBadge } from "./agency-badge";
 
-export function JobListItem({ job, fit, where, href, active }: { job: Job; fit: Fit; where: Eligibility | null; href: string; active: boolean }) {
+export function JobListItem({
+  job,
+  fit,
+  where,
+  agency,
+  href,
+  active,
+}: {
+  job: Job;
+  fit: Fit;
+  where: Eligibility | null;
+  agency: Agency | null;
+  href: string;
+  active: boolean;
+}) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
   return (
     <Link
@@ -44,6 +60,7 @@ export function JobListItem({ job, fit, where, href, active }: { job: Job; fit: 
           {job.employment_type && <span>{job.employment_type}</span>}
           {job.seniority && <span>{job.seniority}</span>}
           {where && <LocationBadge eligibility={where} />}
+          <AgencyBadge agency={agency} />
           <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url, job.apply_account)} />
           <FreshnessBadge freshness={freshness(job)} />
           <span className="ml-auto">

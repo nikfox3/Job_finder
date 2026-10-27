@@ -56,8 +56,15 @@ Jobs refresh when the app starts and every 3 hours while it runs, or when you pr
 | 4 Day Week | Jobs with a 4-day or 32-hour week, filtered to design roles |
 | NoDesk | Curated remote jobs, filtered to design roles |
 | Jobspresso | Hand-screened remote jobs, filtered to design roles |
+| Built In | US tech companies, remote design and UX roles |
+| Welcome to the Jungle | Startups and scale-ups with full-remote design roles |
+| Hacker News | The monthly "Who is hiring?" thread, filtered to design roles |
 | Arbeitnow | Mostly European roles (off by default) |
 | Company watchlist | Any company hiring through Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee or Breezy. Add their careers link in Settings |
+
+### Agencies
+
+The **Agencies** tab lists creative staffing agencies (Aquent, Creative Circle, Robert Half and others) and design studios (MetaLab, Superside, IDEO and others), with what they do and any of their roles already in your feed. Jobs posted by an agency get a tag across the app, and the Jobs filters can show agencies only or hide staffing agencies. You can add your own agencies, and watch a studio's careers page to pull its openings in.
 
 ### Closed and stale postings
 

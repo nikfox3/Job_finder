@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "./db";
 import { SOURCES } from "./sources";
 import type { WatchedCompany } from "./sources/companies";
+import type { CustomAgency } from "./agencies";
 
 export type SourceInfo = { id: string; name: string; description: string };
 
@@ -22,6 +23,8 @@ export type Settings = {
   writingGuide: string;
   sources: Record<string, boolean>;
   companies: WatchedCompany[];
+  /** Agencies you added on the Agencies page. */
+  agencies: CustomAgency[];
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -34,6 +37,7 @@ export const DEFAULT_SETTINGS: Settings = {
   writingGuide: "",
   sources: Object.fromEntries(SOURCES.map((s) => [s.id, s.defaultEnabled])),
   companies: [],
+  agencies: [],
 };
 
 export function getSettings(): Settings {

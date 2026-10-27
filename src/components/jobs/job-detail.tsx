@@ -1,9 +1,12 @@
+import Link from "next/link";
 import { Briefcase, Building2, Check, Clock, Globe2, MapPin, Users, Wallet, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatSalary, sourceName, timeAgo } from "@/lib/format";
 import type { Job } from "@/lib/jobs";
 import type { Fit } from "@/lib/fit";
 import { CompanyLogo } from "./company-logo";
+import { AgencyBadge } from "./agency-badge";
+import type { Agency } from "@/lib/agencies";
 import { FitBadge } from "./fit-badge";
 import { ApplyMethodBadge } from "./apply-method-badge";
 import { applyMethod } from "@/lib/apply-method";
@@ -27,7 +30,19 @@ function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string;
   );
 }
 
-export function JobDetail({ job, fit, where, homeCountry }: { job: Job; fit: Fit; where: Eligibility | null; homeCountry: string }) {
+export function JobDetail({
+  job,
+  fit,
+  where,
+  agency = null,
+  homeCountry,
+}: {
+  job: Job;
+  fit: Fit;
+  where: Eligibility | null;
+  agency?: Agency | null;
+  homeCountry: string;
+}) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
   return (
     <article className="rounded-xl border bg-card">
@@ -36,7 +51,14 @@ export function JobDetail({ job, fit, where, homeCountry }: { job: Job; fit: Fit
           <CompanyLogo name={job.company} className="size-12 text-base" />
           <div className="min-w-0 flex-1">
             <h2 className="text-xl font-semibold tracking-tight">{job.title}</h2>
-            <p className="mt-0.5 text-muted-foreground">{job.company}</p>
+            <p className="mt-0.5 flex flex-wrap items-center gap-2 text-muted-foreground">
+              {job.company}
+              {agency && (
+                <Link href={`/agencies#${agency.kind === "staffing" ? "staffing" : "studios"}`} className="hover:opacity-80">
+                  <AgencyBadge agency={agency} />
+                </Link>
+              )}
+            </p>
           </div>
           <div className="flex flex-col items-center gap-1">
             <FitBadge score={fit.score} size={52} className="[&>span]:text-sm" />

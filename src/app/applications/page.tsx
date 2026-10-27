@@ -3,11 +3,18 @@ import { BoardCard } from "@/components/applications/board-card";
 import { listBoard } from "@/lib/applications";
 import { STATUSES } from "@/lib/stats";
 import { timeAgoPrecise } from "@/lib/format";
+import { getSettings } from "@/lib/settings";
+import { AGENCY_KINDS, agencyMatcher, allAgencies } from "@/lib/agencies";
 
 export const dynamic = "force-dynamic";
 
 export default function ApplicationsPage() {
   const cards = listBoard();
+  const agencyOf = agencyMatcher(allAgencies(getSettings().agencies));
+  const agencyLabel = (company: string) => {
+    const agency = agencyOf(company);
+    return agency ? AGENCY_KINDS[agency.kind] : undefined;
+  };
   return (
     <>
       <PageHeader title="Applications" description="Track every role from saved to offer. Save or apply to a job and it shows up here." />
@@ -30,6 +37,7 @@ export default function ApplicationsPage() {
                       jobId={c.job_id}
                       title={c.title}
                       company={c.company}
+                      agency={agencyLabel(c.company)}
                       status={c.status}
                       note={c.applied_at ? `Applied ${timeAgoPrecise(c.applied_at)}` : `Updated ${timeAgoPrecise(c.updated_at)}`}
                       // Only worth flagging before you've applied.

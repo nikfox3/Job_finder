@@ -7,7 +7,24 @@ import { STATUSES, type Status } from "@/lib/status";
 import { setStatusAction } from "@/app/actions/applications";
 import { CompanyLogo } from "@/components/jobs/company-logo";
 
-export function BoardCard({ jobId, title, company, status, note, closed = false }: { jobId: number; title: string; company: string; status: Status; note: string; closed?: boolean }) {
+export function BoardCard({
+  jobId,
+  title,
+  company,
+  agency,
+  status,
+  note,
+  closed = false,
+}: {
+  jobId: number;
+  title: string;
+  company: string;
+  /** "Staffing agency" or "Design studio" when an agency posted it. */
+  agency?: string;
+  status: Status;
+  note: string;
+  closed?: boolean;
+}) {
   const [pending, start] = useTransition();
   return (
     <div className={cn("rounded-lg border bg-card p-3 shadow-xs transition-opacity", pending && "opacity-50")}>
@@ -15,7 +32,10 @@ export function BoardCard({ jobId, title, company, status, note, closed = false 
         <CompanyLogo name={company} className="size-8 text-xs" />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium hover:underline">{title}</p>
-          <p className="truncate text-xs text-muted-foreground">{company}</p>
+          <p className="truncate text-xs text-muted-foreground">
+            {company}
+            {agency && <span className="text-primary"> · {agency}</span>}
+          </p>
         </div>
       </Link>
       <div className="mt-3 flex flex-col gap-2">

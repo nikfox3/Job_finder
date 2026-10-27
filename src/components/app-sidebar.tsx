@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Briefcase, KanbanSquare, LayoutDashboard, Settings, UserRound, Sparkles } from "lucide-react";
+import { Briefcase, Building2, KanbanSquare, LayoutDashboard, Settings, UserRound, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 
@@ -10,6 +10,7 @@ const NAV = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/jobs", label: "Jobs", icon: Briefcase },
   { href: "/applications", label: "Applications", icon: KanbanSquare },
+  { href: "/agencies", label: "Agencies", icon: Building2 },
   { href: "/profile", label: "Profile", icon: UserRound },
   { href: "/settings", label: "Settings", icon: Settings },
 ];

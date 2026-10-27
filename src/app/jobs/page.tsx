@@ -16,6 +16,7 @@ import { RefreshButton } from "@/components/jobs/refresh-button";
 import { AddJob } from "@/components/jobs/add-job";
 import type { Job } from "@/lib/jobs";
 import { countryByCode, eligibility } from "@/lib/geo";
+import { agencyMatcher, allAgencies } from "@/lib/agencies";
 
 // The same role is often posted on several boards; keep the newest copy.
 function dedupe(jobs: Job[]) {
@@ -49,11 +50,19 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
   const home = settings.homeCountry;
   // The URL can override the saved preference either way.
   const scope = home ? (params.where ?? settings.locationScope) : "all";
+  const agencyOf = agencyMatcher(allAgencies(settings.agencies));
   const jobs = dedupe(listJobs(filters))
     // Closed postings stay visible only if they're on your board.
     .filter((job) => !job.closed_at || job.status)
     .filter((job) => !hideAccount || applyMethod(job.apply_url ?? job.url, job.apply_account).kind !== "account")
-    .map((job) => ({ job, fit: fitFor(job), where: home ? eligibility(job.location, home, job.description) : null }))
+    .map((job) => ({ job, fit: fitFor(job), agency: agencyOf(job.company), where: home ? eligibility(job.location, home, job.description) : null }))
+    .filter(({ agency }) => {
+      // "only" and "no-staffing" come from the filter bar, a name from the Agencies page.
+      if (!params.agency) return true;
+      if (params.agency === "only") return Boolean(agency);
+      if (params.agency === "no-staffing") return agency?.kind !== "staffing";
+      return agency?.name === params.agency;
+    })
     .filter(({ where }) => {
       if (!where || scope === "all") return true;
       // "home" keeps jobs that name your country, e.g. "US only" or "Remote - US".
@@ -102,14 +111,14 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <div className="flex flex-col gap-2 lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto lg:pr-1">
-            {jobs.map(({ job, fit, where }) => (
-              <JobListItem key={job.id} job={job} fit={fit} where={where} href={hrefFor(job.id)} active={job.id === selectedJob?.id} />
+            {jobs.map(({ job, fit, where, agency }) => (
+              <JobListItem key={job.id} job={job} fit={fit} where={where} agency={agency} href={hrefFor(job.id)} active={job.id === selectedJob?.id} />
             ))}
           </div>
           {selectedJob && (
             // Keyed by job so switching jobs starts the panel at the top.
             <div key={selectedJob.id} className="hidden lg:block lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto lg:overscroll-contain lg:rounded-xl">
-              <JobDetail homeCountry={home} job={selectedJob} fit={fitFor(selectedJob)} where={home ? eligibility(selectedJob.location, home, selectedJob.description) : null} />
+              <JobDetail homeCountry={home} job={selectedJob} agency={agencyOf(selectedJob.company)} fit={fitFor(selectedJob)} where={home ? eligibility(selectedJob.location, home, selectedJob.description) : null} />
             </div>
           )}
         </div>

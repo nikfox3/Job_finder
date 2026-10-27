@@ -16,9 +16,11 @@ const KEEP_DAYS = 45;
 
 export type RunResult = { source: string; name: string; found: number; added: number; error: string | null; skipped?: boolean };
 
-async function request(url: string) {
+async function request(url: string, init: { method?: string; headers?: Record<string, string>; body?: string } = {}) {
   const res = await fetch(url, {
-    headers: { "User-Agent": USER_AGENT, Accept: "application/json, application/rss+xml, text/html;q=0.9, */*;q=0.8" },
+    method: init.method ?? "GET",
+    body: init.body,
+    headers: { "User-Agent": USER_AGENT, Accept: "application/json, application/rss+xml, text/html;q=0.9, */*;q=0.8", ...init.headers },
     signal: AbortSignal.timeout(TIMEOUT_MS),
     redirect: "follow",
   });
@@ -28,7 +30,7 @@ async function request(url: string) {
 
 export const httpContext = (keywords: string[]): FetchContext => ({
   keywords,
-  fetchJson: async (url) => (await request(url)).json(),
+  fetchJson: async (url, init) => (await request(url, init)).json(),
   fetchText: async (url) => (await request(url)).text(),
 });
 

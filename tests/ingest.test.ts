@@ -20,6 +20,10 @@ const responses: Record<string, unknown> = {
   "4dayweek.io": { jobs: [], has_more: false },
   "nodesk.co": "<rss><channel></channel></rss>",
   "jobspresso.co": "<rss><channel></channel></rss>",
+  "builtin.com": "<html></html>",
+  "www.welcometothejungle.com": 'window.env = {"PUBLIC_ALGOLIA_APPLICATION_ID":"ABCDEF123","PUBLIC_ALGOLIA_API_KEY_CLIENT":"0123456789abcdef0123"}',
+  "abcdef123-dsn.algolia.net": { hits: [] },
+  "hn.algolia.com": { hits: [{ objectID: "1", title: "Ask HN: Who is hiring? (October 2026)" }], children: [] },
 };
 
 const calls: string[] = [];
@@ -28,7 +32,7 @@ beforeAll(() => {
   vi.stubGlobal("fetch", async (input: string) => {
     const url = new URL(input);
     calls.push(url.hostname);
-    const isApi = /api|\.rss$|\.xml$|feed=/.test(url.hostname + url.pathname + url.search);
+    const isApi = /api|algolia|\.rss$|\.xml$|feed=|builtin\.com/.test(url.hostname + url.pathname + url.search);
     const body = isApi ? responses[url.hostname] : undefined;
     if (body === undefined) return new Response("<html>Apply now <input type=file name=resume></html>", { status: 200 });
     return new Response(typeof body === "string" ? body : JSON.stringify(body), { status: 200 });
