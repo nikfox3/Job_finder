@@ -8,6 +8,8 @@ import { CompanyLogo } from "./company-logo";
 import { FitBadge } from "./fit-badge";
 import { ApplyMethodBadge } from "./apply-method-badge";
 import { applyMethod } from "@/lib/apply-method";
+import type { Eligibility } from "@/lib/geo";
+import { LocationBadge } from "./location-badge";
 
 function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string; value: string | null }) {
   if (!value) return null;
@@ -22,7 +24,7 @@ function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string;
   );
 }
 
-export function JobDetail({ job, fit }: { job: Job; fit: Fit }) {
+export function JobDetail({ job, fit, where }: { job: Job; fit: Fit; where: Eligibility | null }) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
   return (
     <article className="flex h-full flex-col rounded-xl border bg-card">
@@ -51,7 +53,10 @@ export function JobDetail({ job, fit }: { job: Job; fit: Fit }) {
             </a>
           </Button>
         </div>
-        <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url, job.apply_account)} showPlatform className="mt-3 text-sm" />
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+          {where && <LocationBadge eligibility={where} />}
+          <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url, job.apply_account)} showPlatform />
+        </div>
       </header>
 
       <div className="grid grid-cols-2 gap-2 border-b p-6 xl:grid-cols-3">

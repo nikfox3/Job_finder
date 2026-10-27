@@ -11,6 +11,8 @@ export type Settings = {
   autoSubmit: boolean;
   remoteOnly: boolean;
   hideAccountRequired: boolean;
+  /** ISO country code of where you live, e.g. "US". Empty means not set. */
+  homeCountry: string;
   keywords: string;
   sources: Record<string, boolean>;
   companies: WatchedCompany[];
@@ -20,6 +22,7 @@ export const DEFAULT_SETTINGS: Settings = {
   autoSubmit: false,
   remoteOnly: true,
   hideAccountRequired: false,
+  homeCountry: "",
   keywords: "product designer, ux designer, ui designer",
   sources: Object.fromEntries(SOURCES.map((s) => [s.id, s.defaultEnabled])),
   companies: [],

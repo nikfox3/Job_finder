@@ -9,7 +9,7 @@ import { sourceName } from "@/lib/format";
 const selectClass =
   "h-9 rounded-md border border-input bg-card px-3 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-export function JobFilters({ sources, hideAccountDefault }: { sources: string[]; hideAccountDefault: boolean }) {
+export function JobFilters({ sources, hideAccountDefault, homeName }: { sources: string[]; hideAccountDefault: boolean; homeName: string | null }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -57,6 +57,12 @@ export function JobFilters({ sources, hideAccountDefault }: { sources: string[];
         <option value="7">Past week</option>
         <option value="30">Past month</option>
       </select>
+      {homeName && (
+        <select className={selectClass} value={params.get("where") ?? "me"} onChange={(e) => set("where", e.target.value)}>
+          <option value="me">Open to {homeName}</option>
+          <option value="all">All locations</option>
+        </select>
+      )}
       <select
         className={selectClass}
         value={params.get("account") ?? (hideAccountDefault ? "none" : "any")}
@@ -68,6 +74,7 @@ export function JobFilters({ sources, hideAccountDefault }: { sources: string[];
       <select className={selectClass} value={params.get("sort") ?? ""} onChange={(e) => set("sort", e.target.value)}>
         <option value="">Newest first</option>
         <option value="fit">Best fit first</option>
+        {homeName && <option value="closest">Closest first</option>}
       </select>
     </div>
   );

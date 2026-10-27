@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { addCompanyAction, removeCompanyAction, updateSettings } from "@/app/actions/settings";
 import type { Settings, SourceInfo } from "@/lib/settings";
 import { ATS_NAMES } from "@/lib/sources/companies";
+import { COUNTRIES } from "@/lib/geo";
 
 function Row({ id, title, description, children }: { id: string; title: string; description: string; children: React.ReactNode }) {
   return (
@@ -73,6 +74,23 @@ export function SettingsForm({ initial, sources }: { initial: Settings; sources:
             </div>
             <p className="text-xs text-muted-foreground">Comma separated. Jobs matching any keyword are shown.</p>
           </div>
+          <Row id="homeCountry" title="Where you live" description="Jobs limited to other countries are tagged and can be hidden. Sort by Closest to see yours first.">
+            <select
+              id="homeCountry"
+              value={settings.homeCountry}
+              onChange={(e) => save({ homeCountry: e.target.value })}
+              className="h-9 w-52 rounded-md border border-input bg-card px-3 text-sm shadow-xs focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <option value="">Not set</option>
+              {[...COUNTRIES]
+                .sort((a, b) => a.name.localeCompare(b.name))
+                .map((c) => (
+                  <option key={c.code} value={c.code}>
+                    {c.name}
+                  </option>
+                ))}
+            </select>
+          </Row>
           <Row id="remoteOnly" title="Remote only" description="Hide roles that need you in an office.">
             <Switch id="remoteOnly" checked={settings.remoteOnly} onCheckedChange={(v) => save({ remoteOnly: v })} />
           </Row>

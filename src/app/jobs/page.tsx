@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { Briefcase } from "lucide-react";
 import { EmptyState } from "@/components/empty-state";
@@ -14,6 +15,7 @@ import { timeAgoPrecise } from "@/lib/format";
 import { RefreshButton } from "@/components/jobs/refresh-button";
 import { AddJob } from "@/components/jobs/add-job";
 import type { Job } from "@/lib/jobs";
+import { countryByCode, eligibility } from "@/lib/geo";
 
 // The same role is often posted on several boards; keep the newest copy.
 function dedupe(jobs: Job[]) {
@@ -44,10 +46,15 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
   const fitFor = (job: Parameters<typeof scoreFit>[0]) => scoreFit(job, profile, settings);
   // The URL can override the saved preference either way.
   const hideAccount = params.account ? params.account === "none" : settings.hideAccountRequired;
+  const home = settings.homeCountry;
+  // The URL can override the saved preference either way.
+  const onlyMine = Boolean(home) && params.where !== "all";
   const jobs = dedupe(listJobs(filters))
     .filter((job) => !hideAccount || applyMethod(job.apply_url ?? job.url, job.apply_account).kind !== "account")
-    .map((job) => ({ job, fit: fitFor(job) }));
+    .map((job) => ({ job, fit: fitFor(job), where: home ? eligibility(job.location, home) : null }))
+    .filter(({ where }) => !onlyMine || !where || where.canApply);
   if (params.sort === "fit") jobs.sort((a, b) => b.fit.score - a.fit.score);
+  if (params.sort === "closest") jobs.sort((a, b) => (a.where?.tier ?? 3) - (b.where?.tier ?? 3) || (a.where?.distanceKm ?? 0) - (b.where?.distanceKm ?? 0));
   const selectedJob = (params.job && getJob(Number(params.job))) || jobs[0]?.job || null;
 
   const hrefFor = (id: number) => {
@@ -63,13 +70,22 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
           <h1 className="text-2xl font-semibold tracking-tight">Jobs</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {jobs.length} {jobs.length === 1 ? "role" : "roles"} matching your search{settings.remoteOnly ? " · remote only" : ""}
+            {!home && (
+              <>
+                {" · "}
+                <Link href="/settings" className="text-primary hover:underline">
+                  Set where you live
+                </Link>{" "}
+                to hide jobs you can&apos;t take
+              </>
+            )}
           </p>
         </div>
         <RefreshButton updated={timeAgoPrecise(lastRefresh())} />
         <AddJob />
       </div>
       <Suspense>
-        <JobFilters sources={listJobSources()} hideAccountDefault={settings.hideAccountRequired} />
+        <JobFilters sources={listJobSources()} hideAccountDefault={settings.hideAccountRequired} homeName={countryByCode(home)?.name ?? null} />
       </Suspense>
       {jobs.length === 0 ? (
         <EmptyState
@@ -80,13 +96,13 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <div className="flex flex-col gap-2 lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto lg:pr-1">
-            {jobs.map(({ job, fit }) => (
-              <JobListItem key={job.id} job={job} fit={fit} href={hrefFor(job.id)} active={job.id === selectedJob?.id} />
+            {jobs.map(({ job, fit, where }) => (
+              <JobListItem key={job.id} job={job} fit={fit} where={where} href={hrefFor(job.id)} active={job.id === selectedJob?.id} />
             ))}
           </div>
           {selectedJob && (
             <div className="hidden lg:sticky lg:top-8 lg:block lg:h-[calc(100vh-13rem)]">
-              <JobDetail job={selectedJob} fit={fitFor(selectedJob)} />
+              <JobDetail job={selectedJob} fit={fitFor(selectedJob)} where={home ? eligibility(selectedJob.location, home) : null} />
             </div>
           )}
         </div>
