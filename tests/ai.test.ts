@@ -91,5 +91,6 @@ describe("coverLetterQuestions", () => {
     await writeCoverLetter(job, profile, [{ question: "Have you used Framer?", answer: "Yes, daily" }]);
     expect(create.mock.calls[0][0].messages[0].content).toContain("Q: Have you used Framer?\nA: Yes, daily");
     expect(create.mock.calls[0][0].system).toContain("never leave blanks");
+    expect(create.mock.calls[0][0].system).toContain('Never use "we", "our" or "us" for the candidate');
   });
 });

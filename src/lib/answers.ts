@@ -19,3 +19,10 @@ export function saveAnswers(rows: { question: string; answer: string }[]) {
 export function addAnswer(question: string, answer: string) {
   db.prepare("INSERT INTO answers (question, answer, position) VALUES (?, ?, (SELECT COALESCE(MAX(position), 0) + 1 FROM answers))").run(question, answer);
 }
+
+/** Updates the answer to a question you've answered before (matched ignoring case), or adds it. */
+export function upsertAnswer(question: string, answer: string) {
+  const existing = db.prepare("SELECT id FROM answers WHERE lower(trim(question)) = lower(trim(?))").get(question) as { id: number } | undefined;
+  if (existing) db.prepare("UPDATE answers SET answer = ? WHERE id = ?").run(answer, existing.id);
+  else addAnswer(question, answer);
+}

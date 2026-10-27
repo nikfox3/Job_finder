@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { addAnswer, listAnswers, saveAnswers } from "@/lib/answers";
+import { addAnswer, listAnswers, saveAnswers, upsertAnswer } from "@/lib/answers";
 import { deleteDocument, DOC_KINDS, saveDocument, type DocKind } from "@/lib/documents";
 import { getJob } from "@/lib/jobs";
 import { getProfile } from "@/lib/profile";
@@ -51,7 +51,7 @@ export async function draftDocumentAction(jobId: number, kind: DocKind, useAi: b
     const content = useAi
       ? kind === "cover_letter"
         ? await writeCoverLetter(job, profile, [...listAnswers(), ...quickAnswers])
-        : await tailorResume(job, profile)
+        : await tailorResume(job, profile, listAnswers())
       : kind === "cover_letter"
         ? coverLetterTemplate(job, profile)
         : (profile.resume_text ?? "");
@@ -88,7 +88,7 @@ export async function draftAnswerAction(jobId: number, question: string, length:
 
 export async function addAnswerAction(question: string, answer: string) {
   if (!question.trim() || !answer.trim()) return;
-  addAnswer(question.trim(), answer.trim());
+  upsertAnswer(question.trim(), answer.trim());
   revalidatePath("/", "layout");
 }
 

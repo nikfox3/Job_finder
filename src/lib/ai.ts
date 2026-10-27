@@ -15,11 +15,17 @@ export function aiKey() {
 
 const RULES = `Use only facts found in the resume, profile and the candidate's answers. Never invent employers, job titles, dates, numbers, tools or skills. If a detail is missing, write around it using what you do have; never leave blanks, brackets or placeholders for the candidate to fill in. Write plain text with no markdown.`;
 
+// Letters and answers speak for one person, even when the resume describes team work.
+const VOICE = `Write as one person applying on their own behalf, in the first person singular ("I", "my"). Never use "we", "our" or "us" for the candidate. When the resume describes team work, make the candidate's own part clear, as in "I led..." or "I worked with engineers to...". Only use "you" and "your team" for the company.`;
+
 export type Fact = { question: string; answer: string };
 
 function factsBlock(facts: Fact[]) {
   const known = facts.filter((f) => f.answer.trim()).map((f) => `Q: ${f.question}\nA: ${f.answer}`);
-  return known.length ? `\n\n<candidate_answers>\n${known.join("\n\n")}\n</candidate_answers>` : "";
+  // Saved answers are background the writer may draw on, not a checklist to cover.
+  return known.length
+    ? `\n\n<candidate_answers>\nThings the candidate has told you before. Use one only when it makes this piece stronger for this job; usually that's few or none. Never list them, and leave out logistics like salary, sponsorship or start date unless asked.\n\n${known.join("\n\n")}\n</candidate_answers>`
+    : "";
 }
 
 function context(job: Job, profile: Profile) {
@@ -103,16 +109,17 @@ Then write the letter:
 - Paragraph 3, one or two sentences: why this company, using the specific detail, then a simple close.
 - Don't retell the resume or list every job. Use only the evidence that matches this posting.
 - Plain, confident and conversational, with short sentences. Avoid stock phrases such as ${CLICHES.map((c) => `"${c}"`).join(", ")}.
+- ${VOICE}
 - ${RULES}
 - Start with "Dear ${job.company} hiring team," and end with "Sincerely," followed by the candidate's name. Return only the letter.${preferences()}`,
     `${context(job, profile)}${factsBlock(facts)}\n\nWrite a cover letter for the ${job.title} role at ${job.company}.`,
   );
 }
 
-export function tailorResume(job: Job, profile: Profile) {
+export function tailorResume(job: Job, profile: Profile, facts: Fact[] = []) {
   return write(
     `You tailor resumes to a specific job. ${RULES} Keep every employer, title and date from the original. Reorder sections and bullets so the most relevant come first, tighten wording, and use the job's terms only where the resume already supports them. Put each section heading in capitals on its own line and start bullets with "- ". Leave out the name and contact lines.`,
-    `${context(job, profile)}\n\nTailor this resume for the job. Return only the resume.`,
+    `${context(job, profile)}${factsBlock(facts)}\n\nTailor this resume for the job. Return only the resume.`,
   );
 }
 
@@ -126,7 +133,7 @@ const LENGTHS: Record<AnswerLength, string> = {
 /** Drafts an answer to one application question, in the candidate's own voice. */
 export function answerQuestion(job: Job, profile: Profile, question: string, length: AnswerLength, saved: Fact[]) {
   return write(
-    `You help a job seeker answer questions on job applications. ${RULES} Write in the first person, in a natural, confident voice, as the candidate. Answer the question directly, connect it to this job where it fits, and use a specific example from the resume when one applies. Keep it to ${LENGTHS[length]}. Return only the answer.${preferences()}`,
+    `You help a job seeker answer questions on job applications. ${RULES} ${VOICE} Use a natural, confident voice. Answer the question directly, connect it to this job where it fits, and use a specific example from the resume when one applies. Keep it to ${LENGTHS[length]}. Return only the answer.${preferences()}`,
     `${context(job, profile)}${factsBlock(saved)}\n\n<question>\n${question}\n</question>`,
   );
 }

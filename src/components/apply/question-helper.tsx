@@ -27,6 +27,15 @@ export function QuestionHelper({ jobId, hasAi }: { jobId: number; hasAi: boolean
   const [pending, start] = useTransition();
   const [saving, startSave] = useTransition();
 
+  // Anything you use gets saved, so future letters and answers can draw on it.
+  function remember() {
+    if (savedFor === answer) return;
+    startSave(async () => {
+      await addAnswerAction(question, answer);
+      setSavedFor(answer);
+    });
+  }
+
   function draft() {
     setError(null);
     start(async () => {
@@ -93,19 +102,14 @@ export function QuestionHelper({ jobId, hasAi }: { jobId: number; hasAi: boolean
               style={{ fieldSizing: "content" } as React.CSSProperties}
             />
             <div className="flex items-center gap-1">
-              <CopyButton value={answer} label="answer" />
-              <span className="text-xs text-muted-foreground">Read it over and make it sound like you before pasting.</span>
+              <CopyButton value={answer} label="answer" onCopy={remember} />
+              <span className="text-xs text-muted-foreground">Copying also saves it to your answer bank for future letters.</span>
               <Button
                 variant="ghost"
                 size="sm"
                 className="ml-auto"
                 disabled={saving || savedFor === answer}
-                onClick={() =>
-                  startSave(async () => {
-                    await addAnswerAction(question, answer);
-                    setSavedFor(answer);
-                  })
-                }
+                onClick={remember}
               >
                 {savedFor === answer ? <Check /> : <BookmarkPlus />} {savedFor === answer ? "In answer bank" : "Save to answer bank"}
               </Button>

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-export function CopyButton({ value, label }: { value: string; label: string }) {
+export function CopyButton({ value, label, onCopy }: { value: string; label: string; onCopy?: () => void }) {
   const [copied, setCopied] = useState(false);
   return (
     <Button
@@ -14,6 +14,7 @@ export function CopyButton({ value, label }: { value: string; label: string }) {
       aria-label={`Copy ${label}`}
       onClick={async () => {
         await navigator.clipboard.writeText(value);
+        onCopy?.();
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
