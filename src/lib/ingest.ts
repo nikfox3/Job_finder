@@ -6,6 +6,7 @@ import { SOURCES } from "./sources";
 import { fetchCompany, type WatchedCompany } from "./sources/companies";
 import type { FetchContext, JobInput } from "./sources/types";
 import { isRelevant } from "./sources/util";
+import { CLOSED_PAGE } from "./freshness";
 import { applyMethod } from "./apply-method";
 
 const USER_AGENT = "CareerOps/0.1 (personal job search dashboard, runs locally)";
@@ -63,7 +64,7 @@ const upsert = () =>
       company_industry = COALESCE(excluded.company_industry, jobs.company_industry),
       company_size = COALESCE(excluded.company_size, jobs.company_size),
       company_website = COALESCE(excluded.company_website, jobs.company_website),
-      fetched_at = datetime('now')
+      fetched_at = datetime('now'), closed_at = NULL
   `);
 
 /** Saves jobs from one source and returns how many were new. */
@@ -117,13 +118,35 @@ function minutesSince(sqlDate: string) {
   return (Date.now() - new Date(sqlDate.replace(" ", "T") + "Z").getTime()) / 60_000;
 }
 
-async function runOne(id: string, name: string, minInterval: number, load: () => Promise<JobInput[]>, keywords: string[], mixed: boolean): Promise<RunResult> {
+/**
+ * A company careers page lists every open role, so a job that drops off it has
+ * closed. (Job boards only return recent pages, so this only applies to companies.)
+ */
+function closeMissing(source: string, prefix: string, seen: JobInput[]) {
+  db.prepare(
+    `UPDATE jobs SET closed_at = datetime('now')
+     WHERE source = ? AND external_id LIKE ? AND closed_at IS NULL
+       AND external_id NOT IN (SELECT value FROM json_each(?))`,
+  ).run(source, `${prefix}%`, JSON.stringify(seen.map((j) => j.externalId)));
+}
+
+async function runOne(
+  id: string,
+  name: string,
+  minInterval: number,
+  load: () => Promise<JobInput[]>,
+  keywords: string[],
+  mixed: boolean,
+  companyPrefix?: string,
+): Promise<RunResult> {
   const prev = lastRun(id);
   if (prev && minutesSince(prev.ran_at) < minInterval) return { source: id, name, found: 0, added: 0, error: null, skipped: true };
   try {
     const all = await load();
     const jobs = mixed ? all.filter((j) => isRelevant(j.title, keywords)) : all;
-    const added = saveJobs(id.startsWith("company:") ? "company" : id, jobs);
+    const source = id.startsWith("company:") ? "company" : id;
+    const added = saveJobs(source, jobs);
+    if (companyPrefix) closeMissing(source, companyPrefix, all);
     const result = { source: id, name, found: jobs.length, added, error: null };
     recordRun(result);
     return result;
@@ -161,6 +184,39 @@ export async function checkApplyPages(limit = 15) {
   );
 }
 
+/**
+ * Re-opens week-old postings, a few per refresh and each at most once a day,
+ * to catch ones that were taken down or say they're filled. Jobs on your
+ * board go first.
+ */
+export async function checkStillOpen(limit = 10) {
+  const rows = db
+    .prepare(
+      `SELECT j.id, j.url FROM jobs j LEFT JOIN applications a ON a.job_id = j.id
+       WHERE j.closed_at IS NULL AND j.source NOT IN ('sample', 'import')
+         AND j.posted_at < datetime('now', '-7 days')
+         AND (j.checked_at IS NULL OR j.checked_at < datetime('now', '-1 day'))
+       ORDER BY a.job_id IS NULL, j.checked_at IS NOT NULL, j.posted_at DESC
+       LIMIT ?`,
+    )
+    .all(limit) as { id: number; url: string }[];
+  const checked = db.prepare("UPDATE jobs SET checked_at = datetime('now') WHERE id = ?");
+  const close = db.prepare("UPDATE jobs SET closed_at = datetime('now') WHERE id = ?");
+  await Promise.all(
+    rows.map(async (r) => {
+      try {
+        const res = await fetch(r.url, { headers: { "User-Agent": USER_AGENT }, signal: AbortSignal.timeout(10_000) });
+        // Only a clear "gone" counts; sites that block bots (403, 429) prove nothing.
+        const gone = res.status === 404 || res.status === 410 || (res.ok && CLOSED_PAGE.test(await res.text()));
+        if (gone) close.run(r.id);
+      } catch {
+        // Offline or timed out: try again another day.
+      }
+      checked.run(r.id);
+    }),
+  );
+}
+
 function describeError(e: unknown) {
   if (e instanceof Error && e.name === "TimeoutError") return "took too long to answer";
   // Node's fetch reports DNS/connection problems as a bare "fetch failed".
@@ -181,10 +237,10 @@ export function refreshJobs(): Promise<RunResult[]> {
       runOne(s.id, s.name, s.minIntervalMinutes, () => s.fetch(ctx), keywords, s.mixedRoles),
     );
     const companies = settings.companies.map((c: WatchedCompany) =>
-      runOne(`company:${c.ats}:${c.slug}`, c.name, 60, () => fetchCompany(c, ctx), keywords, true),
+      runOne(`company:${c.ats}:${c.slug}`, c.name, 60, () => fetchCompany(c, ctx), keywords, true, `${c.slug}-`),
     );
     const results = await Promise.all([...boards, ...companies]);
-    await checkApplyPages();
+    await Promise.all([checkApplyPages(), checkStillOpen()]);
     db.prepare(
       `DELETE FROM jobs WHERE fetched_at < datetime('now', ?) AND source NOT IN ('sample', 'import')
        AND id NOT IN (SELECT job_id FROM applications)`,

@@ -25,6 +25,8 @@ export type Job = {
   company_size: string | null;
   company_website: string | null;
   apply_account: string | null;
+  /** Set when the posting disappeared from its careers page or says it's closed. */
+  closed_at: string | null;
   status: Status | null;
 };
 

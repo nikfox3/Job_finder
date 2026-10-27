@@ -108,6 +108,10 @@ const MIGRATIONS: string[] = [
     PRIMARY KEY (job_id, kind)
   );
   `,
+  `
+  ALTER TABLE jobs ADD COLUMN closed_at TEXT;
+  ALTER TABLE jobs ADD COLUMN checked_at TEXT;
+  `,
 ];
 
 function migrate(db: Database.Database) {

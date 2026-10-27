@@ -11,6 +11,8 @@ import type { Eligibility } from "@/lib/geo";
 import { LocationBadge } from "./location-badge";
 import { JobActions } from "./job-actions";
 import { WorkAuthSection } from "./work-auth-section";
+import { FreshnessNote } from "./freshness-badge";
+import { freshness } from "@/lib/freshness";
 
 function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string; value: string | null }) {
   if (!value) return null;
@@ -46,6 +48,7 @@ export function JobDetail({ job, fit, where, homeCountry }: { job: Job; fit: Fit
           {where && <LocationBadge eligibility={where} />}
           <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url, job.apply_account)} showPlatform />
         </div>
+        <FreshnessNote freshness={freshness(job)} />
       </header>
 
       <div className="grid grid-cols-2 gap-2 border-b p-6 xl:grid-cols-3">

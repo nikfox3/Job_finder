@@ -15,7 +15,7 @@ export async function addCompanyAction(_prev: CompanyState, form: FormData): Pro
   const link = String(form.get("link") ?? "");
   const parsed = parseCareersUrl(link);
   if (!parsed) {
-    return { error: "Paste a Greenhouse, Lever or Ashby careers link, like boards.greenhouse.io/acme or jobs.lever.co/acme." };
+    return { error: "Paste a careers link from Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee or Breezy, like boards.greenhouse.io/acme or apply.workable.com/acme." };
   }
   const name = String(form.get("name") ?? "").trim() || parsed.slug.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const { companies } = getSettings();
