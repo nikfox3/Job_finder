@@ -14,8 +14,9 @@ const FIELDS = [
   { name: "phone", label: "Phone", placeholder: "+1 555 000 0000" },
   { name: "location", label: "Location", placeholder: "City, Country" },
   { name: "headline", label: "Headline", placeholder: "Senior Product Designer" },
-  { name: "portfolio_url", label: "Portfolio", placeholder: "https://", type: "url" },
-  { name: "linkedin_url", label: "LinkedIn", placeholder: "https://linkedin.com/in/", type: "url" },
+  // Plain text so short addresses like "yourname.design" are accepted; https:// is added on save.
+  { name: "portfolio_url", label: "Portfolio", placeholder: "yourname.design", inputMode: "url" },
+  { name: "linkedin_url", label: "LinkedIn", placeholder: "linkedin.com/in/yourname", inputMode: "url" },
 ] as const;
 
 export default function ProfilePage() {
@@ -37,6 +38,7 @@ export default function ProfilePage() {
                   id={f.name}
                   name={f.name}
                   type={"type" in f ? f.type : "text"}
+                  inputMode={"inputMode" in f ? f.inputMode : undefined}
                   placeholder={f.placeholder}
                   defaultValue={profile[f.name] ?? ""}
                 />

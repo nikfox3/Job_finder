@@ -61,6 +61,28 @@ const MIGRATIONS: string[] = [
   );
   INSERT INTO profile (id) VALUES (1);
   `,
+  `
+  ALTER TABLE jobs ADD COLUMN employment_type TEXT;
+  ALTER TABLE jobs ADD COLUMN seniority TEXT;
+  ALTER TABLE jobs ADD COLUMN timezone TEXT;
+  `,
+  `
+  ALTER TABLE jobs ADD COLUMN company_description TEXT;
+  ALTER TABLE jobs ADD COLUMN company_industry TEXT;
+  ALTER TABLE jobs ADD COLUMN company_size TEXT;
+  ALTER TABLE jobs ADD COLUMN company_website TEXT;
+  `,
+  `
+  ALTER TABLE jobs ADD COLUMN apply_account TEXT;
+  CREATE TABLE source_runs (
+    source    TEXT PRIMARY KEY,
+    ran_at    TEXT NOT NULL,
+    found     INTEGER NOT NULL DEFAULT 0,
+    added     INTEGER NOT NULL DEFAULT 0,
+    error     TEXT
+  );
+  CREATE INDEX jobs_posted_at ON jobs (posted_at);
+  `,
 ];
 
 function open() {
@@ -69,13 +91,13 @@ function open() {
   db.pragma("journal_mode = WAL");
   db.pragma("foreign_keys = ON");
 
-  const version = db.pragma("user_version", { simple: true }) as number;
-  for (let i = version; i < MIGRATIONS.length; i++) {
-    db.transaction(() => {
-      db.exec(MIGRATIONS[i]);
-      db.pragma(`user_version = ${i + 1}`);
-    })();
-  }
+  // IMMEDIATE takes the write lock before reading the version, so parallel
+  // processes (e.g. Next.js build workers) can't apply the same migration twice.
+  db.transaction(() => {
+    const version = db.pragma("user_version", { simple: true }) as number;
+    for (let i = version; i < MIGRATIONS.length; i++) db.exec(MIGRATIONS[i]);
+    db.pragma(`user_version = ${MIGRATIONS.length}`);
+  }).immediate();
   return db;
 }
 

@@ -9,7 +9,7 @@ export default function SettingsPage() {
     <>
       <PageHeader title="Settings" description="Saved automatically to your local database." />
       <div className="max-w-3xl">
-        <SettingsForm initial={getSettings()} sources={JOB_SOURCES.map((s) => ({ ...s }))} />
+        <SettingsForm initial={getSettings()} sources={JOB_SOURCES} />
       </div>
     </>
   );
