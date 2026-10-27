@@ -66,6 +66,12 @@ const MIGRATIONS: string[] = [
   ALTER TABLE jobs ADD COLUMN seniority TEXT;
   ALTER TABLE jobs ADD COLUMN timezone TEXT;
   `,
+  `
+  ALTER TABLE jobs ADD COLUMN company_description TEXT;
+  ALTER TABLE jobs ADD COLUMN company_industry TEXT;
+  ALTER TABLE jobs ADD COLUMN company_size TEXT;
+  ALTER TABLE jobs ADD COLUMN company_website TEXT;
+  `,
 ];
 
 function open() {

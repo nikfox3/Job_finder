@@ -20,6 +20,10 @@ export type Job = {
   employment_type: string | null;
   seniority: string | null;
   timezone: string | null;
+  company_description: string | null;
+  company_industry: string | null;
+  company_size: string | null;
+  company_website: string | null;
   status: Status | null;
 };
 

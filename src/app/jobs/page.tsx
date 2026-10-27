@@ -7,6 +7,8 @@ import { JobListItem } from "@/components/jobs/job-list-item";
 import { JobDetail } from "@/components/jobs/job-detail";
 import { getSettings } from "@/lib/settings";
 import { getJob, listJobs, listJobSources, type JobFilters as Filters } from "@/lib/jobs";
+import { getProfile } from "@/lib/profile";
+import { scoreFit } from "@/lib/fit";
 
 export const dynamic = "force-dynamic";
 
@@ -22,8 +24,11 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
     minSalary: params.salary ? Number(params.salary) : undefined,
     posted: params.posted as Filters["posted"],
   };
-  const jobs = listJobs(filters);
-  const selected = (params.job && getJob(Number(params.job))) || jobs[0] || null;
+  const profile = getProfile();
+  const fitFor = (job: Parameters<typeof scoreFit>[0]) => scoreFit(job, profile, settings);
+  const jobs = listJobs(filters).map((job) => ({ job, fit: fitFor(job) }));
+  if (params.sort === "fit") jobs.sort((a, b) => b.fit.score - a.fit.score);
+  const selectedJob = (params.job && getJob(Number(params.job))) || jobs[0]?.job || null;
 
   const hrefFor = (id: number) => {
     const next = new URLSearchParams(Object.entries(params).filter((e): e is [string, string] => Boolean(e[1])));
@@ -45,13 +50,13 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <div className="flex flex-col gap-2 lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto lg:pr-1">
-            {jobs.map((job) => (
-              <JobListItem key={job.id} job={job} href={hrefFor(job.id)} active={job.id === selected?.id} />
+            {jobs.map(({ job, fit }) => (
+              <JobListItem key={job.id} job={job} fit={fit} href={hrefFor(job.id)} active={job.id === selectedJob?.id} />
             ))}
           </div>
-          {selected && (
+          {selectedJob && (
             <div className="hidden lg:sticky lg:top-8 lg:block lg:h-[calc(100vh-13rem)]">
-              <JobDetail job={selected} />
+              <JobDetail job={selectedJob} fit={fitFor(selectedJob)} />
             </div>
           )}
         </div>

@@ -1,9 +1,11 @@
-import { Bookmark, Briefcase, Clock, ExternalLink, Globe2, MapPin, Send, Wallet } from "lucide-react";
+import { Bookmark, Briefcase, Building2, Check, Clock, ExternalLink, Globe2, MapPin, Send, Users, Wallet, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { formatSalary, sourceName, timeAgo } from "@/lib/format";
 import type { Job } from "@/lib/jobs";
+import type { Fit } from "@/lib/fit";
 import { CompanyLogo } from "./company-logo";
+import { FitBadge } from "./fit-badge";
 
 function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string; value: string | null }) {
   if (!value) return null;
@@ -18,7 +20,7 @@ function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string;
   );
 }
 
-export function JobDetail({ job }: { job: Job }) {
+export function JobDetail({ job, fit }: { job: Job; fit: Fit }) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
   return (
     <article className="flex h-full flex-col rounded-xl border bg-card">
@@ -28,6 +30,10 @@ export function JobDetail({ job }: { job: Job }) {
           <div className="min-w-0 flex-1">
             <h2 className="text-xl font-semibold tracking-tight">{job.title}</h2>
             <p className="mt-0.5 text-muted-foreground">{job.company}</p>
+          </div>
+          <div className="flex flex-col items-center gap-1">
+            <FitBadge score={fit.score} size={52} className="[&>span]:text-sm" />
+            <span className="text-xs text-muted-foreground">Fit</span>
           </div>
         </div>
         <div className="mt-5 flex flex-wrap gap-2">
@@ -54,6 +60,42 @@ export function JobDetail({ job }: { job: Job }) {
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
+        <section className="mb-6 rounded-lg border p-4">
+          <h3 className="mb-3 text-sm font-semibold">Why it fits</h3>
+          <ul className="grid gap-2 text-sm sm:grid-cols-2">
+            {fit.reasons.map((r) => (
+              <li key={r.label} className="flex items-center gap-2">
+                {r.met ? <Check className="size-4 text-success" /> : <X className="size-4 text-muted-foreground" />}
+                <span className={r.met ? "" : "text-muted-foreground"}>{r.label}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {(job.company_description || job.company_industry || job.company_size) && (
+          <section className="mb-6 rounded-lg bg-muted/50 p-4">
+            <div className="mb-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+              <h3 className="text-sm font-semibold">About {job.company}</h3>
+              {job.company_industry && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Building2 className="size-3.5" /> {job.company_industry}
+                </span>
+              )}
+              {job.company_size && (
+                <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                  <Users className="size-3.5" /> {job.company_size} employees
+                </span>
+              )}
+              {job.company_website && (
+                <a href={job.company_website} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs text-primary hover:underline">
+                  <Globe2 className="size-3.5" /> Website
+                </a>
+              )}
+            </div>
+            {job.company_description && <p className="text-sm leading-relaxed text-muted-foreground">{job.company_description}</p>}
+          </section>
+        )}
+
         {job.tags.length > 0 && (
           <div className="mb-5 flex flex-wrap gap-1.5">
             {job.tags.map((t) => (

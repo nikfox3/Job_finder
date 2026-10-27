@@ -57,6 +57,10 @@ export function JobFilters({ sources }: { sources: string[] }) {
         <option value="7">Past week</option>
         <option value="30">Past month</option>
       </select>
+      <select className={selectClass} value={params.get("sort") ?? ""} onChange={(e) => set("sort", e.target.value)}>
+        <option value="">Newest first</option>
+        <option value="fit">Best fit first</option>
+      </select>
     </div>
   );
 }

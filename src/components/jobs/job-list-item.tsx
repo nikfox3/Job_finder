@@ -3,9 +3,11 @@ import { Bookmark } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatSalary, sourceName, timeAgo } from "@/lib/format";
 import type { Job } from "@/lib/jobs";
+import type { Fit } from "@/lib/fit";
 import { CompanyLogo } from "./company-logo";
+import { FitBadge } from "./fit-badge";
 
-export function JobListItem({ job, href, active }: { job: Job; href: string; active: boolean }) {
+export function JobListItem({ job, fit, href, active }: { job: Job; fit: Fit; href: string; active: boolean }) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
   return (
     <Link
@@ -26,7 +28,10 @@ export function JobListItem({ job, href, active }: { job: Job; href: string; act
               {job.remote && job.location ? ` (${job.location})` : ""}
             </p>
           </div>
-          {job.status && <Bookmark className="size-4 shrink-0 fill-primary text-primary" />}
+          <div className="flex items-center gap-2">
+            {job.status && <Bookmark className="size-4 shrink-0 fill-primary text-primary" />}
+            <FitBadge score={fit.score} size={36} />
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
           {salary && <span className="font-medium text-success">{salary}</span>}

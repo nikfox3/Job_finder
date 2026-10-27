@@ -11,7 +11,7 @@ if (!fs.existsSync(dbPath)) {
   process.exit(1);
 }
 const db = new Database(dbPath);
-if (db.pragma("user_version", { simple: true }) < 2) {
+if (db.pragma("user_version", { simple: true }) < 3) {
   console.error("Database is out of date. Start the app once with `npm run dev`, then run this again.");
   process.exit(1);
 }
@@ -46,26 +46,30 @@ const description = (company, focus) => `${company} is a fully remote team build
 - Annual team retreat`;
 
 const jobs = [
-  ["Senior Product Designer", "Northwind Labs", "US or Canada", 140000, 175000, "USD", "Full-time", "Senior", "UTC-8 to UTC-5", ["Figma", "Design systems", "B2B SaaS"], 0, "collaborative analytics tools"],
-  ["UX Designer", "Brightloop", "Europe", 70000, 90000, "EUR", "Full-time", "Mid-level", "UTC±0 to UTC+3", ["User research", "Prototyping", "Mobile"], 1, "a habit-tracking app for teams"],
-  ["Product Designer, Growth", "Canvasly", "Worldwide", 110000, 135000, "USD", "Full-time", "Mid-level", "Any", ["Experimentation", "Onboarding", "Figma"], 2, "a visual collaboration platform"],
-  ["Lead UI Designer", "Orbital Health", "US", 160000, 190000, "USD", "Full-time", "Lead", "UTC-8 to UTC-5", ["Healthcare", "Accessibility", "Design systems"], 3, "patient-friendly telehealth software"],
-  ["Design Systems Designer", "Fieldnote", "Americas", 125000, 150000, "USD", "Full-time", "Senior", "UTC-8 to UTC-3", ["Tokens", "Components", "Documentation"], 5, "note-taking for research teams"],
-  ["Product Designer (Contract)", "Tidewater", "Worldwide", 85, 110, "USD", "Contract", "Mid-level", "Any", ["Fintech", "Dashboards"], 6, "cash-flow tools for small businesses"],
-  ["Junior Product Designer", "Pebble & Co", "UK or Europe", 40000, 50000, "GBP", "Full-time", "Junior", "UTC±0 to UTC+2", ["Mentorship", "E-commerce"], 9, "a marketplace for independent makers"],
-  ["Staff Product Designer", "Lumen AI", "US or Europe", 185000, 220000, "USD", "Full-time", "Staff", "UTC-5 to UTC+2", ["AI products", "Strategy", "Prototyping"], 14, "AI writing assistants for support teams"],
+  ["Senior Product Designer", "Northwind Labs", "US or Canada", 140000, 175000, "USD", "Full-time", "Senior", "UTC-8 to UTC-5", ["Figma", "Design systems", "B2B SaaS"], 0, "collaborative analytics tools", "Analytics", "51-200"],
+  ["UX Designer", "Brightloop", "Europe", 70000, 90000, "EUR", "Full-time", "Mid-level", "UTC±0 to UTC+3", ["User research", "Prototyping", "Mobile"], 1, "a habit-tracking app for teams", "Productivity", "11-50"],
+  ["Product Designer, Growth", "Canvasly", "Worldwide", 110000, 135000, "USD", "Full-time", "Mid-level", "Any", ["Experimentation", "Onboarding", "Figma"], 2, "a visual collaboration platform", "Design tools", "201-500"],
+  ["Lead UI Designer", "Orbital Health", "US", 160000, 190000, "USD", "Full-time", "Lead", "UTC-8 to UTC-5", ["Healthcare", "Accessibility", "Design systems"], 3, "patient-friendly telehealth software", "Healthcare", "501-1000"],
+  ["Design Systems Designer", "Fieldnote", "Americas", 125000, 150000, "USD", "Full-time", "Senior", "UTC-8 to UTC-3", ["Tokens", "Components", "Documentation"], 5, "note-taking for research teams", "Research software", "11-50"],
+  ["Product Designer (Contract)", "Tidewater", "Worldwide", 85, 110, "USD", "Contract", "Mid-level", "Any", ["Fintech", "Dashboards"], 6, "cash-flow tools for small businesses", "Fintech", "51-200"],
+  ["Junior Product Designer", "Pebble & Co", "UK or Europe", 40000, 50000, "GBP", "Full-time", "Junior", "UTC±0 to UTC+2", ["Mentorship", "E-commerce"], 9, "a marketplace for independent makers", "E-commerce", "11-50"],
+  ["Staff Product Designer", "Lumen AI", "US or Europe", 185000, 220000, "USD", "Full-time", "Staff", "UTC-5 to UTC+2", ["AI products", "Strategy", "Prototyping"], 14, "AI writing assistants for support teams", "Artificial intelligence", "201-500"],
 ];
 
 const insert = db.prepare(`
   INSERT INTO jobs (source, external_id, title, company, location, remote, salary_min, salary_max, currency, url,
-                    description, tags, posted_at, employment_type, seniority, timezone)
+                    description, tags, posted_at, employment_type, seniority, timezone,
+                    company_description, company_industry, company_size, company_website)
   VALUES ('sample', @id, @title, @company, @location, 1, @min, @max, @currency, 'https://example.com/jobs',
-          @description, @tags, @posted, @type, @seniority, @tz)
+          @description, @tags, @posted, @type, @seniority, @tz,
+          @about, @industry, @size, 'https://example.com')
 `);
 db.transaction(() => {
-  jobs.forEach(([title, company, location, min, max, currency, type, seniority, tz, tags, age, focus], i) =>
+  jobs.forEach(([title, company, location, min, max, currency, type, seniority, tz, tags, age, focus, industry, size], i) =>
     insert.run({ id: `sample-${i}`, title, company, location, min, max, currency, type, seniority, tz,
-      tags: JSON.stringify(tags), posted: daysAgo(age), description: description(company, focus) }),
+      tags: JSON.stringify(tags), posted: daysAgo(age), description: description(company, focus),
+      about: `${company} builds ${focus}. The team works fully remotely and ships in small, frequent releases.`,
+      industry, size }),
   );
 })();
 console.log(`Added ${jobs.length} sample jobs. Open http://localhost:3000/jobs`);
