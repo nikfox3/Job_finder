@@ -52,8 +52,16 @@ Jobs refresh when the app starts and every 3 hours while it runs, or when you pr
 | Himalayas | Remote jobs matching your keywords, with timezone and company info |
 | Jobicy | Remote design & multimedia category |
 | Working Nomads | Remote design category |
+| The Muse | Design & UX roles that are remote or flexible |
+| 4 Day Week | Jobs with a 4-day or 32-hour week, filtered to design roles |
+| NoDesk | Curated remote jobs, filtered to design roles |
+| Jobspresso | Hand-screened remote jobs, filtered to design roles |
 | Arbeitnow | Mostly European roles (off by default) |
-| Company watchlist | Any company hiring through Greenhouse, Lever or Ashby. Add their careers link in Settings |
+| Company watchlist | Any company hiring through Greenhouse, Lever, Ashby, Workable, SmartRecruiters, Recruitee or Breezy. Add their careers link in Settings |
+
+### Closed and stale postings
+
+Postings that come down from a watched company's careers page are marked closed and hidden. Each refresh also re-opens a few week-old postings (at most once a day each, jobs on your board first) and marks them closed if the page is gone or says the role is filled. Closed jobs on your board stay visible with a "Posting closed" tag. Postings over a month old are tagged, since they're often already filled or ghost jobs.
 
 LinkedIn, Indeed, Wellfound and Dribbble don't offer public feeds, so use **Add from link** on the Jobs page. If the site won't share the details, you can fill in the title and company yourself.
 

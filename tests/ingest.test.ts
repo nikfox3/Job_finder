@@ -16,6 +16,10 @@ const responses: Record<string, unknown> = {
   "jobicy.com": f.jobicy,
   "www.workingnomads.com": f.workingnomads,
   "boards-api.greenhouse.io": f.greenhouse,
+  "www.themuse.com": { results: [], page_count: 0 },
+  "4dayweek.io": { jobs: [], has_more: false },
+  "nodesk.co": "<rss><channel></channel></rss>",
+  "jobspresso.co": "<rss><channel></channel></rss>",
 };
 
 const calls: string[] = [];
@@ -24,7 +28,7 @@ beforeAll(() => {
   vi.stubGlobal("fetch", async (input: string) => {
     const url = new URL(input);
     calls.push(url.hostname);
-    const isApi = /api|\.rss$/.test(url.hostname + url.pathname);
+    const isApi = /api|\.rss$|\.xml$|feed=/.test(url.hostname + url.pathname + url.search);
     const body = isApi ? responses[url.hostname] : undefined;
     if (body === undefined) return new Response("<html>Apply now <input type=file name=resume></html>", { status: 200 });
     return new Response(typeof body === "string" ? body : JSON.stringify(body), { status: 200 });
@@ -40,6 +44,9 @@ describe("refreshJobs", () => {
   it("pulls every enabled source into the database", async () => {
     const { saveSettings } = await import("@/lib/settings");
     saveSettings({ companies: [{ ats: "greenhouse", slug: "kappa", name: "Kappa" }] });
+    // A role Kappa has since taken off its careers page.
+    const { db } = await import("@/lib/db");
+    db.prepare("INSERT INTO jobs (source, external_id, title, company, url) VALUES ('company', 'kappa-999', 'Old Designer', 'Kappa', 'https://x')").run();
 
     const { refreshJobs } = await import("@/lib/ingest");
     const results = await refreshJobs();
@@ -54,7 +61,9 @@ describe("refreshJobs", () => {
 
     const { listJobs } = await import("@/lib/jobs");
     const jobs = listJobs();
-    expect(jobs.length).toBe(8);
+    expect(jobs.length).toBe(9);
+    expect(jobs.find((j) => j.title === "Old Designer")!.closed_at).not.toBeNull();
+    expect(jobs.filter((j) => j.closed_at)).toHaveLength(1);
     const acme = jobs.find((j) => j.company === "Acme")!;
     expect(acme.description).toBe("<p>Design things.</p>");
   });

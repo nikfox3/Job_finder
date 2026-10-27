@@ -32,6 +32,8 @@ export default function ApplicationsPage() {
                       company={c.company}
                       status={c.status}
                       note={c.applied_at ? `Applied ${timeAgoPrecise(c.applied_at)}` : `Updated ${timeAgoPrecise(c.updated_at)}`}
+                      // Only worth flagging before you've applied.
+                      closed={Boolean(c.closed_at) && (c.status === "saved" || c.status === "applying")}
                     />
                   ))}
                 </div>

@@ -152,8 +152,8 @@ function CompanyWatchlist({ companies }: { companies: Settings["companies"] }) {
       <CardHeader>
         <CardTitle>Company watchlist</CardTitle>
         <CardDescription>
-          Follow companies you&apos;d love to work for. Their design openings come straight from their careers page. Works with Greenhouse, Lever and
-          Ashby, which also don&apos;t need an account to apply.
+          Follow companies you&apos;d love to work for. Their design openings come straight from their careers page. Works with Greenhouse, Lever,
+          Ashby, Workable, SmartRecruiters, Recruitee and Breezy, none of which need an account to apply.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-4">

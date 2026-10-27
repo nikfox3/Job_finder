@@ -10,6 +10,8 @@ import { ApplyMethodBadge } from "./apply-method-badge";
 import { applyMethod } from "@/lib/apply-method";
 import type { Eligibility } from "@/lib/geo";
 import { LocationBadge } from "./location-badge";
+import { FreshnessBadge } from "./freshness-badge";
+import { freshness } from "@/lib/freshness";
 
 export function JobListItem({ job, fit, where, href, active }: { job: Job; fit: Fit; where: Eligibility | null; href: string; active: boolean }) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
@@ -43,6 +45,7 @@ export function JobListItem({ job, fit, where, href, active }: { job: Job; fit: 
           {job.seniority && <span>{job.seniority}</span>}
           {where && <LocationBadge eligibility={where} />}
           <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url, job.apply_account)} />
+          <FreshnessBadge freshness={freshness(job)} />
           <span className="ml-auto">
             {sourceName(job.source)} · {timeAgo(job.posted_at)}
           </span>

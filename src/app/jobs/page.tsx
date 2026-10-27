@@ -50,6 +50,8 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
   // The URL can override the saved preference either way.
   const scope = home ? (params.where ?? settings.locationScope) : "all";
   const jobs = dedupe(listJobs(filters))
+    // Closed postings stay visible only if they're on your board.
+    .filter((job) => !job.closed_at || job.status)
     .filter((job) => !hideAccount || applyMethod(job.apply_url ?? job.url, job.apply_account).kind !== "account")
     .map((job) => ({ job, fit: fitFor(job), where: home ? eligibility(job.location, home, job.description) : null }))
     .filter(({ where }) => {

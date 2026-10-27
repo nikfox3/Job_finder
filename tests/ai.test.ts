@@ -20,7 +20,7 @@ const job = {
   id: 1, source: "remotive", title: "Product Designer", company: "Acme", location: null, remote: true, salary_min: null, salary_max: null,
   currency: null, url: "https://x", apply_url: null, description: "<p>Design things.</p>", tags: ["Figma"], posted_at: null,
   employment_type: null, seniority: null, timezone: null, company_description: null, company_industry: null, company_size: null,
-  company_website: null, apply_account: null, status: null,
+  company_website: null, apply_account: null, closed_at: null, status: null,
 };
 const profile = { full_name: "Nik Fox", email: null, phone: null, location: null, headline: null, portfolio_url: null, linkedin_url: null, resume_text: "Figma" };
 

@@ -9,6 +9,7 @@ export type BoardCard = {
   company: string;
   location: string | null;
   remote: number;
+  closed_at: string | null;
   applied_at: string | null;
   updated_at: string;
 };
@@ -36,7 +37,7 @@ export function getStatus(jobId: number): Status | null {
 export function listBoard(): BoardCard[] {
   return db
     .prepare(
-      `SELECT a.job_id, a.status, a.applied_at, a.updated_at, j.title, j.company, j.location, j.remote
+      `SELECT a.job_id, a.status, a.applied_at, a.updated_at, j.title, j.company, j.location, j.remote, j.closed_at
        FROM applications a JOIN jobs j ON j.id = a.job_id
        ORDER BY a.updated_at DESC`,
     )

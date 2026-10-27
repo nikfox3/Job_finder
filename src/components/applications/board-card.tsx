@@ -7,7 +7,7 @@ import { STATUSES, type Status } from "@/lib/status";
 import { setStatusAction } from "@/app/actions/applications";
 import { CompanyLogo } from "@/components/jobs/company-logo";
 
-export function BoardCard({ jobId, title, company, status, note }: { jobId: number; title: string; company: string; status: Status; note: string }) {
+export function BoardCard({ jobId, title, company, status, note, closed = false }: { jobId: number; title: string; company: string; status: Status; note: string; closed?: boolean }) {
   const [pending, start] = useTransition();
   return (
     <div className={cn("rounded-lg border bg-card p-3 shadow-xs transition-opacity", pending && "opacity-50")}>
@@ -19,7 +19,10 @@ export function BoardCard({ jobId, title, company, status, note }: { jobId: numb
         </div>
       </Link>
       <div className="mt-3 flex flex-col gap-2">
-        <span className="text-xs text-muted-foreground">{note}</span>
+        <span className="flex items-center justify-between gap-2 text-xs text-muted-foreground">
+          {note}
+          {closed && <span className="rounded-full bg-danger/10 px-2 py-0.5 font-medium text-danger">Posting closed</span>}
+        </span>
         <select
           aria-label="Move to"
           value={status}
