@@ -78,3 +78,12 @@
     font-feature-settings: "cv11", "ss01";
   }
 }
+
+/* Job descriptions from feeds arrive as (sanitized) HTML. */
+.job-html > * + * { margin-top: 0.9rem; }
+.job-html h1, .job-html h2, .job-html h3, .job-html h4 { font-weight: 600; font-size: 1rem; color: var(--foreground); padding-top: 0.5rem; }
+.job-html ul { list-style: disc; padding-left: 1.25rem; }
+.job-html ol { list-style: decimal; padding-left: 1.25rem; }
+.job-html li + li { margin-top: 0.25rem; }
+.job-html a { color: var(--primary); text-decoration: underline; text-underline-offset: 2px; }
+.job-html strong, .job-html b { font-weight: 600; color: var(--foreground); }

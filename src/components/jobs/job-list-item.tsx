@@ -39,7 +39,7 @@ export function JobListItem({ job, fit, href, active }: { job: Job; fit: Fit; hr
           {salary && <span className="font-medium text-success">{salary}</span>}
           {job.employment_type && <span>{job.employment_type}</span>}
           {job.seniority && <span>{job.seniority}</span>}
-          <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url)} />
+          <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url, job.apply_account)} />
           <span className="ml-auto">
             {sourceName(job.source)} · {timeAgo(job.posted_at)}
           </span>

@@ -33,7 +33,14 @@ const PLATFORMS: [string, string, ApplyMethod["kind"]][] = [
   ["dice.com", "Dice", "account"],
 ];
 
-export function applyMethod(url: string | null): ApplyMethod {
+/** `checked` is the result of opening the apply page, used when the link alone doesn't tell. */
+export function applyMethod(url: string | null, checked?: string | null): ApplyMethod {
+  const fromUrl = classify(url);
+  if (fromUrl.kind === "unknown" && (checked === "account" || checked === "no-account")) return { kind: checked, platform: null };
+  return fromUrl;
+}
+
+function classify(url: string | null): ApplyMethod {
   if (!url) return { kind: "unknown", platform: null };
   let host: string;
   try {

@@ -1,21 +1,19 @@
 import "server-only";
 import { db } from "./db";
+import { SOURCES } from "./sources";
+import type { WatchedCompany } from "./sources/companies";
 
-export const JOB_SOURCES = [
-  { id: "remotive", name: "Remotive", description: "Curated remote jobs with a strong design category." },
-  { id: "remoteok", name: "Remote OK", description: "Large remote-only board, filterable by design tags." },
-  { id: "weworkremotely", name: "We Work Remotely", description: "Long-running remote board with a design section." },
-  { id: "himalayas", name: "Himalayas", description: "Remote jobs with salary and timezone data." },
-] as const;
+export type SourceInfo = { id: string; name: string; description: string };
 
-export type JobSourceId = (typeof JOB_SOURCES)[number]["id"];
+export const JOB_SOURCES: SourceInfo[] = SOURCES.map(({ id, name, description }) => ({ id, name, description }));
 
 export type Settings = {
   autoSubmit: boolean;
   remoteOnly: boolean;
   hideAccountRequired: boolean;
   keywords: string;
-  sources: Record<JobSourceId, boolean>;
+  sources: Record<string, boolean>;
+  companies: WatchedCompany[];
 };
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -23,7 +21,8 @@ export const DEFAULT_SETTINGS: Settings = {
   remoteOnly: true,
   hideAccountRequired: false,
   keywords: "product designer, ux designer, ui designer",
-  sources: { remotive: true, remoteok: true, weworkremotely: true, himalayas: true },
+  sources: Object.fromEntries(SOURCES.map((s) => [s.id, s.defaultEnabled])),
+  companies: [],
 };
 
 export function getSettings(): Settings {
@@ -43,4 +42,8 @@ export function saveSettings(patch: Partial<Settings>) {
   db.transaction(() => {
     for (const [key, value] of Object.entries(patch)) upsert.run(key, JSON.stringify(value));
   })();
+}
+
+export function keywordList(settings: Settings) {
+  return settings.keywords.split(",").map((k) => k.trim()).filter(Boolean);
 }

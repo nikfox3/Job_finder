@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { ShieldAlert } from "lucide-react";
+import { useActionState, useState, useTransition } from "react";
+import { Building2, ShieldAlert, Trash2 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { updateSettings } from "@/app/actions/settings";
-import type { JobSourceId, Settings } from "@/lib/settings";
-
-type Source = { id: JobSourceId; name: string; description: string };
+import { addCompanyAction, removeCompanyAction, updateSettings } from "@/app/actions/settings";
+import type { Settings, SourceInfo } from "@/lib/settings";
+import { ATS_NAMES } from "@/lib/sources/companies";
 
 function Row({ id, title, description, children }: { id: string; title: string; description: string; children: React.ReactNode }) {
   return (
@@ -24,7 +23,7 @@ function Row({ id, title, description, children }: { id: string; title: string; 
   );
 }
 
-export function SettingsForm({ initial, sources }: { initial: Settings; sources: Source[] }) {
+export function SettingsForm({ initial, sources }: { initial: Settings; sources: SourceInfo[] }) {
   const [settings, setSettings] = useState(initial);
   const [keywords, setKeywords] = useState(initial.keywords);
   const [pending, startTransition] = useTransition();
@@ -90,7 +89,7 @@ export function SettingsForm({ initial, sources }: { initial: Settings; sources:
       <Card>
         <CardHeader>
           <CardTitle>Job sources</CardTitle>
-          <CardDescription>Remote-focused boards with free public feeds. LinkedIn and Indeed jobs are added by pasting a link.</CardDescription>
+          <CardDescription>Remote-focused boards with free public feeds, checked every few hours. LinkedIn and Indeed jobs are added with &quot;Add from link&quot; on the Jobs page.</CardDescription>
         </CardHeader>
         <CardContent className="divide-y">
           {sources.map((s) => (
@@ -104,6 +103,49 @@ export function SettingsForm({ initial, sources }: { initial: Settings; sources:
           ))}
         </CardContent>
       </Card>
+
+      <CompanyWatchlist companies={initial.companies} />
     </div>
+  );
+}
+
+function CompanyWatchlist({ companies }: { companies: Settings["companies"] }) {
+  const [state, action, pending] = useActionState(addCompanyAction, { error: null });
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Company watchlist</CardTitle>
+        <CardDescription>
+          Follow companies you&apos;d love to work for. Their design openings come straight from their careers page. Works with Greenhouse, Lever and
+          Ashby, which also don&apos;t need an account to apply.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-4">
+        <form action={action} className="flex flex-wrap gap-2">
+          <Input name="link" required placeholder="boards.greenhouse.io/acme or jobs.lever.co/acme" className="min-w-64 flex-[2]" />
+          <Input name="name" placeholder="Company name (optional)" className="min-w-40 flex-1" />
+          <Button type="submit" variant="outline" disabled={pending}>
+            Add
+          </Button>
+        </form>
+        {state.error && <p className="text-sm text-danger">{state.error}</p>}
+        {companies.length > 0 && (
+          <ul className="divide-y rounded-lg border">
+            {companies.map((c) => (
+              <li key={`${c.ats}:${c.slug}`} className="flex items-center gap-3 px-3 py-2.5 text-sm">
+                <Building2 className="size-4 text-muted-foreground" />
+                <span className="font-medium">{c.name}</span>
+                <span className="text-muted-foreground">
+                  {ATS_NAMES[c.ats]} · {c.slug}
+                </span>
+                <Button variant="ghost" size="icon" className="ml-auto size-8" aria-label={`Remove ${c.name}`} onClick={() => removeCompanyAction(c.ats, c.slug)}>
+                  <Trash2 />
+                </Button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }

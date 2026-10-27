@@ -3,6 +3,11 @@ export const SOURCE_NAMES: Record<string, string> = {
   remoteok: "Remote OK",
   weworkremotely: "We Work Remotely",
   himalayas: "Himalayas",
+  jobicy: "Jobicy",
+  workingnomads: "Working Nomads",
+  arbeitnow: "Arbeitnow",
+  company: "Company site",
+  import: "Added by link",
   linkedin: "LinkedIn",
   indeed: "Indeed",
   sample: "Sample",
@@ -36,4 +41,15 @@ export function companyHue(name: string) {
   let h = 0;
   for (const c of name) h = (h * 31 + c.charCodeAt(0)) % 360;
   return h;
+}
+
+/** "just now", "12 min ago", "3 h ago", "2 days ago" for timestamps stored as UTC. */
+export function timeAgoPrecise(sqlDate: string | null) {
+  if (!sqlDate) return null;
+  const minutes = Math.floor((Date.now() - new Date(sqlDate.replace(" ", "T") + "Z").getTime()) / 60_000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return `${minutes} min ago`;
+  if (minutes < 60 * 24) return `${Math.floor(minutes / 60)} h ago`;
+  const days = Math.floor(minutes / 1440);
+  return `${days} ${days === 1 ? "day" : "days"} ago`;
 }

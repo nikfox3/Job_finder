@@ -24,6 +24,7 @@ export type Job = {
   company_industry: string | null;
   company_size: string | null;
   company_website: string | null;
+  apply_account: string | null;
   status: Status | null;
 };
 

@@ -51,7 +51,7 @@ export function JobDetail({ job, fit }: { job: Job; fit: Fit }) {
             </a>
           </Button>
         </div>
-        <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url)} showPlatform className="mt-3 text-sm" />
+        <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url, job.apply_account)} showPlatform className="mt-3 text-sm" />
       </header>
 
       <div className="grid grid-cols-2 gap-2 border-b p-6 xl:grid-cols-3">
@@ -108,23 +108,28 @@ export function JobDetail({ job, fit }: { job: Job; fit: Fit }) {
             ))}
           </div>
         )}
-        <div className="space-y-4 text-sm leading-relaxed text-foreground/90">
-          {(job.description ?? "").split(/\n{2,}/).map((block, i) =>
-            block.startsWith("## ") ? (
-              <h3 key={i} className="pt-2 text-base font-semibold text-foreground">
-                {block.slice(3)}
-              </h3>
-            ) : block.startsWith("- ") ? (
-              <ul key={i} className="list-disc space-y-1 pl-5">
-                {block.split("\n").map((li) => (
-                  <li key={li}>{li.replace(/^- /, "")}</li>
-                ))}
-              </ul>
-            ) : (
-              <p key={i}>{block}</p>
-            ),
-          )}
-        </div>
+        {job.description && /<[a-z][\s\S]*>/i.test(job.description) ? (
+          // Sanitized when the job was saved (see cleanDescription in lib/ingest.ts).
+          <div className="job-html text-sm leading-relaxed text-foreground/90" dangerouslySetInnerHTML={{ __html: job.description }} />
+        ) : (
+          <div className="space-y-4 text-sm leading-relaxed text-foreground/90">
+            {(job.description ?? "").split(/\n{2,}/).map((block, i) =>
+              block.startsWith("## ") ? (
+                <h3 key={i} className="pt-2 text-base font-semibold text-foreground">
+                  {block.slice(3)}
+                </h3>
+              ) : block.startsWith("- ") ? (
+                <ul key={i} className="list-disc space-y-1 pl-5">
+                  {block.split("\n").map((li) => (
+                    <li key={li}>{li.replace(/^- /, "")}</li>
+                  ))}
+                </ul>
+              ) : (
+                <p key={i}>{block}</p>
+              ),
+            )}
+          </div>
+        )}
       </div>
     </article>
   );

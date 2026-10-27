@@ -1,6 +1,5 @@
 import { Suspense } from "react";
 import { Briefcase } from "lucide-react";
-import { PageHeader } from "@/components/page-header";
 import { EmptyState } from "@/components/empty-state";
 import { JobFilters } from "@/components/jobs/job-filters";
 import { JobListItem } from "@/components/jobs/job-list-item";
@@ -10,6 +9,22 @@ import { getJob, listJobs, listJobSources, type JobFilters as Filters } from "@/
 import { getProfile } from "@/lib/profile";
 import { scoreFit } from "@/lib/fit";
 import { applyMethod } from "@/lib/apply-method";
+import { lastRefresh } from "@/lib/ingest";
+import { timeAgoPrecise } from "@/lib/format";
+import { RefreshButton } from "@/components/jobs/refresh-button";
+import { AddJob } from "@/components/jobs/add-job";
+import type { Job } from "@/lib/jobs";
+
+// The same role is often posted on several boards; keep the newest copy.
+function dedupe(jobs: Job[]) {
+  const seen = new Set<string>();
+  return jobs.filter((j) => {
+    const key = `${j.company}|${j.title}`.toLowerCase().replace(/[^a-z0-9|]/g, "");
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 export const dynamic = "force-dynamic";
 
@@ -29,8 +44,8 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
   const fitFor = (job: Parameters<typeof scoreFit>[0]) => scoreFit(job, profile, settings);
   // The URL can override the saved preference either way.
   const hideAccount = params.account ? params.account === "none" : settings.hideAccountRequired;
-  const jobs = listJobs(filters)
-    .filter((job) => !hideAccount || applyMethod(job.apply_url ?? job.url).kind !== "account")
+  const jobs = dedupe(listJobs(filters))
+    .filter((job) => !hideAccount || applyMethod(job.apply_url ?? job.url, job.apply_account).kind !== "account")
     .map((job) => ({ job, fit: fitFor(job) }));
   if (params.sort === "fit") jobs.sort((a, b) => b.fit.score - a.fit.score);
   const selectedJob = (params.job && getJob(Number(params.job))) || jobs[0]?.job || null;
@@ -43,15 +58,25 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
 
   return (
     <>
-      <PageHeader
-        title="Jobs"
-        description={`${jobs.length} ${jobs.length === 1 ? "role" : "roles"} matching your search${settings.remoteOnly ? " · remote only" : ""}`}
-      />
+      <div className="mb-8 flex flex-wrap items-start gap-x-2 gap-y-4">
+        <div className="mr-auto">
+          <h1 className="text-2xl font-semibold tracking-tight">Jobs</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {jobs.length} {jobs.length === 1 ? "role" : "roles"} matching your search{settings.remoteOnly ? " · remote only" : ""}
+          </p>
+        </div>
+        <RefreshButton updated={timeAgoPrecise(lastRefresh())} />
+        <AddJob />
+      </div>
       <Suspense>
         <JobFilters sources={listJobSources()} hideAccountDefault={settings.hideAccountRequired} />
       </Suspense>
       {jobs.length === 0 ? (
-        <EmptyState icon={Briefcase} title="No jobs found" description="Try a different search, or widen your filters." />
+        <EmptyState
+          icon={Briefcase}
+          title="No jobs found"
+          description={lastRefresh() ? "Try a different search, or widen your filters." : "Press Refresh to pull in jobs from your sources."}
+        />
       ) : (
         <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
           <div className="flex flex-col gap-2 lg:max-h-[calc(100vh-13rem)] lg:overflow-y-auto lg:pr-1">

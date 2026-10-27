@@ -72,6 +72,17 @@ const MIGRATIONS: string[] = [
   ALTER TABLE jobs ADD COLUMN company_size TEXT;
   ALTER TABLE jobs ADD COLUMN company_website TEXT;
   `,
+  `
+  ALTER TABLE jobs ADD COLUMN apply_account TEXT;
+  CREATE TABLE source_runs (
+    source    TEXT PRIMARY KEY,
+    ran_at    TEXT NOT NULL,
+    found     INTEGER NOT NULL DEFAULT 0,
+    added     INTEGER NOT NULL DEFAULT 0,
+    error     TEXT
+  );
+  CREATE INDEX jobs_posted_at ON jobs (posted_at);
+  `,
 ];
 
 function open() {
