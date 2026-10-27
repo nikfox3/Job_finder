@@ -9,6 +9,7 @@ import { getSettings } from "@/lib/settings";
 import { getJob, listJobs, listJobSources, type JobFilters as Filters } from "@/lib/jobs";
 import { getProfile } from "@/lib/profile";
 import { scoreFit } from "@/lib/fit";
+import { applyMethod } from "@/lib/apply-method";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +27,11 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
   };
   const profile = getProfile();
   const fitFor = (job: Parameters<typeof scoreFit>[0]) => scoreFit(job, profile, settings);
-  const jobs = listJobs(filters).map((job) => ({ job, fit: fitFor(job) }));
+  // The URL can override the saved preference either way.
+  const hideAccount = params.account ? params.account === "none" : settings.hideAccountRequired;
+  const jobs = listJobs(filters)
+    .filter((job) => !hideAccount || applyMethod(job.apply_url ?? job.url).kind !== "account")
+    .map((job) => ({ job, fit: fitFor(job) }));
   if (params.sort === "fit") jobs.sort((a, b) => b.fit.score - a.fit.score);
   const selectedJob = (params.job && getJob(Number(params.job))) || jobs[0]?.job || null;
 
@@ -43,7 +48,7 @@ export default async function JobsPage({ searchParams }: { searchParams: SearchP
         description={`${jobs.length} ${jobs.length === 1 ? "role" : "roles"} matching your search${settings.remoteOnly ? " · remote only" : ""}`}
       />
       <Suspense>
-        <JobFilters sources={listJobSources()} />
+        <JobFilters sources={listJobSources()} hideAccountDefault={settings.hideAccountRequired} />
       </Suspense>
       {jobs.length === 0 ? (
         <EmptyState icon={Briefcase} title="No jobs found" description="Try a different search, or widen your filters." />

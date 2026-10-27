@@ -6,6 +6,8 @@ import type { Job } from "@/lib/jobs";
 import type { Fit } from "@/lib/fit";
 import { CompanyLogo } from "./company-logo";
 import { FitBadge } from "./fit-badge";
+import { ApplyMethodBadge } from "./apply-method-badge";
+import { applyMethod } from "@/lib/apply-method";
 
 export function JobListItem({ job, fit, href, active }: { job: Job; fit: Fit; href: string; active: boolean }) {
   const salary = formatSalary(job.salary_min, job.salary_max, job.currency);
@@ -37,6 +39,7 @@ export function JobListItem({ job, fit, href, active }: { job: Job; fit: Fit; hr
           {salary && <span className="font-medium text-success">{salary}</span>}
           {job.employment_type && <span>{job.employment_type}</span>}
           {job.seniority && <span>{job.seniority}</span>}
+          <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url)} />
           <span className="ml-auto">
             {sourceName(job.source)} · {timeAgo(job.posted_at)}
           </span>

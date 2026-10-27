@@ -6,6 +6,8 @@ import type { Job } from "@/lib/jobs";
 import type { Fit } from "@/lib/fit";
 import { CompanyLogo } from "./company-logo";
 import { FitBadge } from "./fit-badge";
+import { ApplyMethodBadge } from "./apply-method-badge";
+import { applyMethod } from "@/lib/apply-method";
 
 function Fact({ icon: Icon, label, value }: { icon: typeof Clock; label: string; value: string | null }) {
   if (!value) return null;
@@ -49,6 +51,7 @@ export function JobDetail({ job, fit }: { job: Job; fit: Fit }) {
             </a>
           </Button>
         </div>
+        <ApplyMethodBadge method={applyMethod(job.apply_url ?? job.url)} showPlatform className="mt-3 text-sm" />
       </header>
 
       <div className="grid grid-cols-2 gap-2 border-b p-6 xl:grid-cols-3">

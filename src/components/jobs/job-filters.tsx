@@ -9,7 +9,7 @@ import { sourceName } from "@/lib/format";
 const selectClass =
   "h-9 rounded-md border border-input bg-card px-3 text-sm shadow-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
 
-export function JobFilters({ sources }: { sources: string[] }) {
+export function JobFilters({ sources, hideAccountDefault }: { sources: string[]; hideAccountDefault: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
@@ -56,6 +56,14 @@ export function JobFilters({ sources }: { sources: string[] }) {
         <option value="1">Past 24 hours</option>
         <option value="7">Past week</option>
         <option value="30">Past month</option>
+      </select>
+      <select
+        className={selectClass}
+        value={params.get("account") ?? (hideAccountDefault ? "none" : "any")}
+        onChange={(e) => set("account", e.target.value)}
+      >
+        <option value="any">Any application</option>
+        <option value="none">No account needed</option>
       </select>
       <select className={selectClass} value={params.get("sort") ?? ""} onChange={(e) => set("sort", e.target.value)}>
         <option value="">Newest first</option>

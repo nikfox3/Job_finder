@@ -56,17 +56,29 @@ const jobs = [
   ["Staff Product Designer", "Lumen AI", "US or Europe", 185000, 220000, "USD", "Full-time", "Staff", "UTC-5 to UTC+2", ["AI products", "Strategy", "Prototyping"], 14, "AI writing assistants for support teams", "Artificial intelligence", "201-500"],
 ];
 
+// Where each sample "applies", to show the account-required tags. Company slugs are made up.
+const applyUrls = [
+  "https://boards.greenhouse.io/northwindlabs/jobs/1",
+  "https://jobs.lever.co/brightloop/1",
+  "https://canvasly.wd1.myworkdayjobs.com/careers/job/1",
+  "https://jobs.ashbyhq.com/orbitalhealth/1",
+  "https://fieldnote.icims.com/jobs/1",
+  "https://example.com/careers/1",
+  "https://apply.workable.com/pebble-and-co/j/1",
+  "https://lumenai.taleo.net/careersection/1",
+];
+
 const insert = db.prepare(`
-  INSERT INTO jobs (source, external_id, title, company, location, remote, salary_min, salary_max, currency, url,
+  INSERT INTO jobs (source, external_id, title, company, location, remote, salary_min, salary_max, currency, url, apply_url,
                     description, tags, posted_at, employment_type, seniority, timezone,
                     company_description, company_industry, company_size, company_website)
-  VALUES ('sample', @id, @title, @company, @location, 1, @min, @max, @currency, 'https://example.com/jobs',
+  VALUES ('sample', @id, @title, @company, @location, 1, @min, @max, @currency, 'https://example.com/jobs', @applyUrl,
           @description, @tags, @posted, @type, @seniority, @tz,
           @about, @industry, @size, 'https://example.com')
 `);
 db.transaction(() => {
   jobs.forEach(([title, company, location, min, max, currency, type, seniority, tz, tags, age, focus, industry, size], i) =>
-    insert.run({ id: `sample-${i}`, title, company, location, min, max, currency, type, seniority, tz,
+    insert.run({ id: `sample-${i}`, applyUrl: applyUrls[i], title, company, location, min, max, currency, type, seniority, tz,
       tags: JSON.stringify(tags), posted: daysAgo(age), description: description(company, focus),
       about: `${company} builds ${focus}. The team works fully remotely and ships in small, frequent releases.`,
       industry, size }),

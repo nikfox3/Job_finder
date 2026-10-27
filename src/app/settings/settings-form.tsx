@@ -77,6 +77,13 @@ export function SettingsForm({ initial, sources }: { initial: Settings; sources:
           <Row id="remoteOnly" title="Remote only" description="Hide roles that need you in an office.">
             <Switch id="remoteOnly" checked={settings.remoteOnly} onCheckedChange={(v) => save({ remoteOnly: v })} />
           </Row>
+          <Row
+            id="hideAccountRequired"
+            title="Hide jobs that need an account"
+            description="Skip roles whose application makes you sign up or log in first (e.g. Workday, Taleo, iCIMS)."
+          >
+            <Switch id="hideAccountRequired" checked={settings.hideAccountRequired} onCheckedChange={(v) => save({ hideAccountRequired: v })} />
+          </Row>
         </CardContent>
       </Card>
 

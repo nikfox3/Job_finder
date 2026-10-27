@@ -13,6 +13,7 @@ export type JobSourceId = (typeof JOB_SOURCES)[number]["id"];
 export type Settings = {
   autoSubmit: boolean;
   remoteOnly: boolean;
+  hideAccountRequired: boolean;
   keywords: string;
   sources: Record<JobSourceId, boolean>;
 };
@@ -20,6 +21,7 @@ export type Settings = {
 export const DEFAULT_SETTINGS: Settings = {
   autoSubmit: false,
   remoteOnly: true,
+  hideAccountRequired: false,
   keywords: "product designer, ux designer, ui designer",
   sources: { remotive: true, remoteok: true, weworkremotely: true, himalayas: true },
 };
